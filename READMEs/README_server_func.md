@@ -81,20 +81,9 @@ public_records = read_public_lib()
       return f"请大家参考上轮队伍信息。队长是{last_round_team["leader"]}号，队员是{" ".join(map(str, last_round_team["members"]))}，对比这一轮，说明……"
   ```
 
-#### **`"global_speech"`**：全图广播发言
+#### **`"global_speech"`**：广播发言
   - `"round": int`：回合序号
   - `"speeches": list[list]`：发言列表，格式 `[[player_id, text], [player_id, text], …]`
-
-#### **`"movement"`**：玩家移动记录
-  - `"round": int`：回合序号
-  - `"movements": list[dict]`：列表，每项是一个字典，键值对如下：
-    - `"player_id": int`：移动的玩家ID
-    - `"requested_moves": list[str]`：请求的移动方向列表
-    - `"executed_moves": list[str]`：实际执行的移动列表
-    - `"final_position": list[int]`：最终坐标 `[x, y]`
-
-#### **`limited_speech`**：有听力范围限制的发言
-  - `"round": int`：回合序号
 
 #### **`"public_vote"`**：公投表决
   - `"round": int`：回合序号

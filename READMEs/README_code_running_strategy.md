@@ -1,6 +1,7 @@
 # 调用用户提交代码的策略
 
 *dmcnczy 25/4/17*
+*wjjpku 25/07/07*
 
 - 用户提交一个python文件代码，必须包含`Player`类，其必须包含以下方法：
 
@@ -18,9 +19,6 @@ def set_role_type(role_type: str):  # 为玩家设置角色
 def pass_role_sight(role_sight: dict[str, int]):  # 向玩家传递角色特有的视野信息（即，某些其他玩家的身份）以键值对{身份: 编号}形式给出
     pass
 
-def pass_map(map_data: list[list[str]]):  # 向玩家传递当前地图的拷贝
-    pass
-
 def pass_message(content: tuple[int, str]):  # 向玩家传递其他玩家的发言，以元组(发言人编号, 发言内容)形式给出
     pass
 
@@ -30,9 +28,6 @@ def pass_mission_members(leader: int, members: list[int]):  # 向玩家传递当
 # 以下为玩家主动行为（即，需要玩家分析计算，执行策略）（仍为服务器端主动调用）
 
 def decide_mission_member(team_size: int) -> list[int]:  # 选择队员
-    pass
-
-def walk() -> tuple:  # 走步，若内核调用后玩家返回('Up', 'Right', 'Down')，即为玩家试图向上、向右再向下行进。传递长度小于3的元组视为放弃步数。
     pass
 
 def say() -> str:  # 发言
@@ -143,6 +138,7 @@ def write_into_private(content):
 
 ## 样例代码的编写：
 *Yimisda 25/04/18*
+*wjjpku 25/07/07*
 
 ### 说明
 1. 样例代码只是对于用户提交代码要求的简单实现和细化，给出角色的通用模型和基本需求。
@@ -182,9 +178,6 @@ class Player:
         self.sight = role_sight
         self.suspects.update(role_sight.values())
 
-    def pass_map(self, map_data: list[list[str]]):
-        self.map = map_data
-
     def pass_message(self, content: tuple[int, str]):
         player_id, speech = content:
         self.memory["speech"].setdefault(player_id, []).append(speech)
@@ -213,12 +206,6 @@ class Player:
             "included_me": self.is_chosen
         })
         # 记录历史队伍和队长，用于后续的推理
-
-    def walk(self) -> tuple:
-        """
-        TODO 现在就是随便走
-        """
-        return "Left", "Up", "Right"
 
     def say(self) -> str:
         # 使用大模型来判断谁最可能是梅林，演示自然语言+正则+推理

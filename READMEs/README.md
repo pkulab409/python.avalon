@@ -11,9 +11,8 @@
 游戏的详细规则、背景故事、角色设定、胜负条件等在项目的 `README.md` 及 `platform/static/docs/README.md` 中有详细阐述。核心玩法围绕两大阵营（骑士方和反抗军方）在至多五轮任务中的博弈，融合了身份隐藏、推理、投票、执行任务以及最终的刺杀环节。
 
 * **阵营与角色**：包含梅林、派西维尔、骑士（蓝方）和莫甘娜、刺客、奥伯伦（红方），每个角色拥有独特能力和信息视角。
-* **游戏流程**：夜晚阶段（角色互认、梅林/派西维尔获取信息）-> 任务阶段（队长组队 -> 全图发言 -> 玩家移动 -> 有限范围发言 -> 公投表决 -> 任务执行）-> （可能发生的）刺杀阶段。
-* **地图与移动**：游戏在9x9地图上进行，玩家每轮可移动3步，位置公开。
-* **发言机制**：分为全图广播的公开讨论和基于角色听力范围（3x3或5x5）的有限讨论。
+* **游戏流程**：夜晚阶段（角色互认、梅林/派西维尔获取信息）-> 任务阶段（队长组队 -> 发言 -> 公投表决 -> 任务执行）-> （可能发生的）刺杀阶段。
+* **发言机制**：公开讨论
 * **胜负判定**：
     * 蓝方：3轮任务成功且梅林未被刺杀。
     * 红方：3轮任务失败，或蓝方3轮任务成功后刺客成功刺杀梅林。
@@ -70,8 +69,8 @@
     * `set_player_index(self, index: int)`: 设置玩家编号。
     * `set_role_type(self, role_type: str)`: 设置玩家角色。
     * `pass_role_sight(self, role_sight: dict[str, int])`: 传递夜晚视野信息。
-    * `pass_map(self, map_data: list[list[str]])`: 传递地图数据。
-    * `pass_position_data(self, player_positions: dict[int,tuple])`: 传递玩家位置信息。
+    <!-- * `pass_map(self, map_data: list[list[str]])`: 传递地图数据。 wjjpku 25/07/07-->
+    <!-- * `pass_position_data(self, player_positions: dict[int,tuple])`: 传递玩家位置信息。 -->
     * `pass_message(self, content: tuple[int, str])`: 接收其他玩家发言。
     * `pass_mission_members(self, leader: int, members: list[int])`: 告知本轮队长及队员。
     * `decide_mission_member(self, team_size: int) -> list[int]`: （队长）选择任务成员。
@@ -189,7 +188,7 @@ pkudsa.avalon/
     * 用户通过`game.py` 蓝图创建对战，选择参与者和AI。
     * `BattleManager` (`battle_manager.py`) 单例接收创建请求，启动一个新的对战线程。
     * 每个对战线程中，`AvalonReferee` (`referee.py`) 实例被创建。
-    * `Referee` 加载玩家AI代码 (使用`restrictor.py` 限制环境)，初始化游戏（角色、地图），并按游戏规则驱动流程。
+    * `Referee` 加载玩家AI代码 (使用`restrictor.py` 限制环境)，初始化游戏（如角色），并按游戏规则驱动流程。
     * 玩家AI通过`avalon_game_helper.py` 提供的接口与LLM交互、记录私有信息。
     * `Observer` (`observer.py`) 记录游戏快照。
     * `BattleService` (`battle_service.py`) 用于裁判与数据库之间的交互，如更新对战状态。
