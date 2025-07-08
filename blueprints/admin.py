@@ -170,6 +170,37 @@ def set_elo(user_id):
         logging.error(f"设置Elo失败: {str(e)}")
         abort(500, description="服务器内部错误")
 
+# 重置密码功能的实现
+@admin_bp.route("/admin/reset_password/<string:user_id>", methods=["POST"])
+@login_required
+@admin_required
+def reset_password(user_id):
+    """重置指定用户的密码"""
+    try:
+        data = request.get_json()
+        new_password = data.get("password")
+        if not new_password:
+            abort(400, description="请求中必须包含新密码")
+
+        # 查询目标用户
+        target_user = User.query.get_or_404(user_id)
+
+        # 安全措施：禁止管理员重置其他管理员的密码
+        if target_user.is_admin and target_user.id != current_user.id:
+            abort(403, description="出于安全原因，不能重置其他管理员的密码")
+
+        # 使用 User 模型中的 set_password 方法来安全地哈希并设置密码
+        target_user.set_password(new_password)
+        db.session.commit()
+
+        logging.info(f"管理员 '{current_user.username}' 重置了用户 '{target_user.username}' 的密码。")
+
+        return jsonify({"message": f"用户 {target_user.username} 的密码已成功重置"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"重置密码失败: {str(e)}", exc_info=True)
+
 
 @admin_bp.route("/admin/terminate_game/<string:game_id>", methods=["POST"])
 @login_required
@@ -952,3 +983,6 @@ def start_specific_rankings():
     except Exception as e:
         logging.error(f"启动指定榜单失败: {str(e)}")
         return jsonify({"status": "error", "message": f"启动失败: {str(e)}"}), 500
+
+
+
