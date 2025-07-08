@@ -16,7 +16,6 @@ from copy import deepcopy
 import logging
 
 PLAYER_COUNT = 7
-MAP_SIZE = 9
 
 # 配置日志
 logger = logging.getLogger(__name__)

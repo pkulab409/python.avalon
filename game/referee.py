@@ -763,7 +763,7 @@ class AvalonReferee:
             except GameTerminationError as e:
                 raise e
 
-            # 2. 第一轮发言（全图广播）
+            # 2. 发言
             logger.info("Starting Global Speech phase.")
             try:
                 self.conduct_global_speech()

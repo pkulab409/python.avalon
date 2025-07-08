@@ -74,7 +74,7 @@
     * `pass_message(self, content: tuple[int, str])`: 接收其他玩家发言。
     * `pass_mission_members(self, leader: int, members: list[int])`: 告知本轮队长及队员。
     * `decide_mission_member(self, team_size: int) -> list[int]`: （队长）选择任务成员。
-    * `walk(self) -> tuple[str, ...]`: 返回移动指令。
+    <!-- * `walk(self) -> tuple[str, ...]`: 返回移动指令。 -->
     * `say(self) -> str`: 发言。
     * `mission_vote1(self) -> bool`: 对队伍提案进行公投。
     * `mission_vote2(self) -> bool`: 任务执行投票（决定成功/失败）。
