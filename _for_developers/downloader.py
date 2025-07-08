@@ -9,9 +9,9 @@ from pathlib import Path
 
 # 动态计算基础目录
 # 配置信息
-SERVER_IP = "10.129.244.236"
-USERNAME = "rocky"
-PASSWORD = "PKU2025dsa"
+SERVER_IP = ""
+USERNAME = ""
+PASSWORD = ""
 SCRIPT_DIR = Path(__file__).parent.absolute()
 LOCAL_BASE_DIR = SCRIPT_DIR.parent / "data"  # 上级目录的data文件夹
 

@@ -103,23 +103,6 @@ class Observer:
                     int: 玩家编号
                     str: 发言内容
 
-            "PrivateSpeech"
-                -- tuple(int, str, list),
-                    int: 玩家编号
-                    str: 发言内容
-                    list: 接收者index
-
-            "Positions"
-                -- dict 玩家位置
-
-            "DefaultPositions"
-                -- dict 玩家初始位置
-
-            "Move"
-                -- tuple(int, list),
-                    int: 0表示开始,8表示结束,其他数字对应玩家编号
-                    list: [valid_moves, new_pos]
-
             "PublicVote"
                 -- tuple(int, str),
                     int: 0表示开始,8表示结束,其他数字对应玩家编号
@@ -181,7 +164,6 @@ class Observer:
         snapshot = {
             "battle_id": self.battle_id,
             "player_count": PLAYER_COUNT,
-            "map_size": MAP_SIZE,
             "timestamp": time.strftime(
                 "%Y-%m-%d %H:%M:%S", time.localtime(time.time())
             ),

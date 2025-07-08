@@ -1349,35 +1349,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 游戏地图 -->
-                    <div class="col-lg-4">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0 fs-6">游戏地图</h5>
-                                <span class="badge bg-light text-dark" id="mapCurrentRoundDisplay">初始状态</span>
-                            </div>
-                            <div class="card-body p-2">
-                                <div class="game-map" id="gameMap">
-                                    <div class="text-center text-muted p-3 small">地图加载中...</div>
-                                </div>
-                            </div>
-                            <div class="card-footer text-center p-2">
-                                <div class="btn-group w-100" role="group">
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-secondary"
-                                            id="mapPrevRoundBtn"
-                                            disabled>
-                                        <i class="bi bi-chevron-left"></i> 上一轮
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-secondary"
-                                            id="mapNextRoundBtn">
-                                        下一轮 <i class="bi bi-chevron-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1880,10 +1851,8 @@
 
         // --- Data from Flask ---
         const gameEvents = {{ game_events|tojson }};
-        const playerMovements = {{ player_movements|tojson }};
         const gameInfo = {{ game_info|tojson }};
         const roles = gameInfo.roles || {};
-        const mapSize = {{ map_size }};
         const gameId = "{{ game_id }}";
 
         // Determine max round from events or score
@@ -1996,71 +1965,7 @@
         }
         preprocessMoveSteps();
 
-        // --- 地图渲染函数 ---
-        function renderMapByMoveIndex(moveIdx) {
-            gameMapContainer.innerHTML = '';
-            let playerPos = {};
-
-            if (true) {
-                Object.entries(playerMovements).forEach(([playerId, moves]) => {
-                    if (moves && moves.length > 0) {
-                        const initialMove = moves.find(move => move.round === 0);
-                        if (initialMove) {
-                            playerPos[playerId] = initialMove.position;
-                        }
-                    }
-                });
-            }
-            if (moveIdx >= 0) {
-                for (let i = 0; i <= moveIdx && i < moveSteps.length; i++) {
-                    const step = moveSteps[i];
-                    playerPos[step.playerId] = step.newPos;
-                }
-            }
-
-            let currentRound = moveIdx >= 0 && moveIdx < moveSteps.length ? moveSteps[moveIdx].round : 0;
-            currentMapRound = currentRound;
-
-            mapPrevRoundBtn.disabled = currentRound <= 0;
-            mapNextRoundBtn.disabled = currentRound >= maxRound;
-
-            for (let r = 0; r < mapSize; r++) {
-                for (let c = 0; c < mapSize; c++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('map-cell');
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-                    gameMapContainer.appendChild(cell);
-                }
-            }
-
-            Object.keys(playerPos).forEach(playerId => {
-                const pos = playerPos[playerId];
-                if (pos && Array.isArray(pos) && pos.length === 2) {
-                    const [row, col] = pos;
-                    if (row >= 0 && row < mapSize && col >= 0 && col < mapSize) {
-                        const cell = gameMapContainer.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                        if (cell) {
-                            const playerInfo = getPlayerInfo(playerId);
-                            const playerToken = document.createElement('div');
-                            playerToken.classList.add('player-token', `player-${playerInfo.faction}`);
-                            playerToken.textContent = playerInfo.id;
-                            playerToken.title = `${playerInfo.id}号 - ${playerInfo.name}`;
-                            cell.appendChild(playerToken);
-                        }
-                    }
-                }
-            });
-
-            if (moveIdx >= 0) {
-                const step = moveSteps[moveIdx];
-                mapCurrentRoundDisplay.textContent = `第${step.round}轮-第${moveIdx + 1}步`;
-            } else {
-                mapCurrentRoundDisplay.textContent = '初始状态';
-            }
-            currentRoundBadge.textContent = mapCurrentRoundDisplay.textContent;
-        }
-
+        
         // --- 聊天历史生成 ---
         function generateChatHistory() {
             let chatHtml = '';
@@ -2364,9 +2269,9 @@
         }
 
         // 初始化内容
-        if (!gameInfo || !gameEvents || !playerMovements || mapSize <= 0) {
+        if (!gameInfo || !gameEvents) {
             chatContainer.innerHTML = `<div class="alert alert-danger m-3">错误：加载对局数据失败，部分信息缺失。请检查日志文件。</div>`;
-            console.error("Game data missing:", { gameInfo, gameEvents, playerMovements, mapSize });
+            console.error("Game data missing:", { gameInfo, gameEvents });
         } else {
             generateChatHistory();
             updateDisplayForRound(0);

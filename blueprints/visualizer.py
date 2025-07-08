@@ -24,22 +24,33 @@ import logging
 from pathlib import Path
 from database.models import Battle, User, BattlePlayer
 from database.action import get_battle_by_id
-from game.tts_service import tts_service
 import threading
+from jinja2 import Undefined
 
 # 创建蓝图
 visualizer_bp = Blueprint("visualizer", __name__, template_folder="templates")
 
 
+def clean_undefined_objects(obj):
+    """递归清理数据中的 Undefined 对象"""
+
+    if isinstance(obj, Undefined):
+        return None
+    elif isinstance(obj, dict):
+        return {k: clean_undefined_objects(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_undefined_objects(item) for item in obj]
+    else:
+        return obj
+
+
 @visualizer_bp.route("/game/<game_id>")
-@login_required
 def game_index(game_id):
     """游戏对局索引页面 - 简单重定向到重放页面"""
     return redirect(url_for("visualizer.game_replay", game_id=game_id))
 
 
 @visualizer_bp.route("/replay/<game_id>")
-@login_required
 def game_replay(game_id):
     """游戏对局重放页面"""
 
@@ -127,27 +138,16 @@ def game_replay(game_id):
         # 处理游戏事件
         game_events = process_game_events(game_data)
 
-        # 获取玩家轨迹数据
-        player_movements = extract_player_movements(game_data)
 
-        # 检查提取的数据是否有效
-        if not game_info.get("map_size"):
-            flash(f"错误：无法从对局记录 {game_id} 中提取地图大小。", "danger")
-            # 尝试从第一个事件获取，如果存在
-            map_size_fallback = game_data[0].get("map_size", 0) if game_data else 0
-            if not map_size_fallback:
-                return render_template(
-                    "error.html", message=f"加载对局记录时出错: 无法确定地图大小"
-                )
-            game_info["map_size"] = map_size_fallback  # Use fallback
+        # 在返回模板之前清理数据
+        game_events = clean_undefined_objects(game_events)
+        game_info = clean_undefined_objects(game_info)
 
         return render_template(
             "visualizer/medieval_style_replay_page.html",
             game_id=game_id,
             game_info=game_info,
             game_events=game_events,
-            player_movements=player_movements,
-            map_size=game_info["map_size"],
             player_usernames=_get_user_names(game_id),
         )
     except Exception as e:
@@ -160,92 +160,13 @@ def game_replay(game_id):
         return render_template("error.html", message=f"加载对局记录时出错: {str(e)}")
 
 
-@visualizer_bp.route("/api/replay/<game_id>")
-@login_required
-def game_replay_data(game_id):
-    """获取游戏对局数据API (此API似乎未使用，但保持原样)"""
-    try:
-        log_file = os.path.join(
-            Config._yaml_config.get("DATA_DIR", "./data"),
-            f"{game_id}/public_game_{game_id}.json",  # 注意：这里用的是 public.json
-        )
-
-        if not os.path.exists(log_file):
-            return jsonify({"success": False, "message": "对局记录不存在"})
-
-        with open(log_file, "r", encoding="utf-8") as f:
-            game_data = json.load(f)
-
-        return jsonify({"success": True, "game_id": game_id, "data": game_data})
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-
-
-@visualizer_bp.route("/api/replay/<game_id>/round/<int:round_num>")
-@login_required
-def get_round_data(game_id, round_num):
-    """获取特定回合的详细数据 (此API似乎未使用，但保持原样)"""
-    try:
-        log_file = os.path.join(
-            Config._yaml_config.get("DATA_DIR", "./data"),
-            f"{game_id}/archive_game_{game_id}.json",
-        )
-
-        if not os.path.exists(log_file):
-            return jsonify({"success": False, "message": "对局记录不存在"})
-
-        with open(log_file, "r", encoding="utf-8") as f:
-            game_data = json.load(f)
-
-        # 过滤特定回合的事件 (注意：需要根据 observer.py 的结构调整过滤逻辑)
-        round_events = []
-        current_round = 0
-        for event in game_data:
-            if event.get("event_type") == "RoundStart":
-                current_round = event.get("event_data")
-            if current_round == round_num:
-                round_events.append(event)
-            # Stop if round number increases beyond target
-            elif current_round > round_num:
-                break
-
-        return jsonify({"success": True, "round": round_num, "events": round_events})
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-
-
-@visualizer_bp.route("/api/replay/<game_id>/movements")
-@login_required
-def get_movement_data(game_id):
-    """获取所有玩家的移动轨迹数据 (此API似乎未使用，但保持原样)"""
-    try:
-        log_file = os.path.join(
-            Config._yaml_config.get("DATA_DIR", "./data"),
-            f"{game_id}/archive_game_{game_id}.json",
-        )
-
-        if not os.path.exists(log_file):
-            return jsonify({"success": False, "message": "对局记录不存在"})
-
-        with open(log_file, "r", encoding="utf-8") as f:
-            game_data = json.load(f)
-
-        player_movements = extract_player_movements(game_data)
-
-        return jsonify({"success": True, "movements": player_movements})
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-
-
 @visualizer_bp.route("/upload", methods=["GET"])
-@login_required
 def upload_game_json():
     """游戏对局JSON上传页面"""
     return render_template("visualizer/upload.html")
 
 
 @visualizer_bp.route("/upload", methods=["POST"])
-@login_required
 def process_upload():
     """处理上传的游戏对局JSON文件"""
     if "game_json" not in request.files:
@@ -332,25 +253,6 @@ def is_valid_game_json(json_data):
         print("Validation failed: Not a list or empty.")
         return False
 
-    # # 检查第一个事件是否为 GameStart
-    # first_event = json_data[0]
-    # if (
-    #     not isinstance(first_event, dict)
-    #     or first_event.get("event_type") != "GameStart"
-    # ):
-    #     print(
-    #         f"Validation failed: First event is not GameStart. Found: {first_event.get('event_type')}"
-    #     )
-    #     return False
-
-    # # 检查 GameStart 事件是否包含必要字段
-    # required_fields = ["battle_id", "player_count", "map_size", "timestamp"]
-    # if not all(field in first_event for field in required_fields):
-    #     print(
-    #         f"Validation failed: Missing fields in GameStart. Required: {required_fields}, Found: {first_event.keys()}"
-    #     )
-    #     return False
-
     # 可以添加更多检查，例如是否存在 RoleAssign, RoundStart 等
     has_role_assign = any(
         event.get("event_type") == "RoleAssign" for event in json_data
@@ -417,9 +319,7 @@ def extract_game_info(game_data, game_id_from_url):
         # 从游戏结束事件提取信息
         elif event_type == "GameResult":
             if isinstance(event_data, (list, tuple)) and len(event_data) >= 2:
-                game_info["winner"] = event_data[
-                    0
-                ].lower()  # Ensure lowercase 'blue' or 'red'
+                game_info["winner"] = event_data[0].lower()  # Ensure lowercase 'blue' or 'red'
                 game_info["win_reason"] = event_data[1]
                 game_info["end_time"] = timestamp  # Use event timestamp
                 game_info["is_completed"] = True
@@ -575,20 +475,6 @@ def process_game_events(game_data):
                             ),
                         }
                     )
-            elif event_type == "PrivateSpeech":
-                if isinstance(event_data, (list, tuple)) and len(event_data) == 3:
-                    # 标记为有限范围发言
-                    current_round["events"].append(
-                        {
-                            "type": "speech",
-                            "data": (
-                                str(event_data[0]),
-                                event_data[1],
-                                "private",
-                                event_data[2],
-                            ),
-                        }
-                    )
             elif event_type == "PublicVote":
                 if isinstance(event_data, (list, tuple)) and len(event_data) == 2:
                     # 检查是否需要创建新的投票尝试
@@ -685,19 +571,6 @@ def process_game_events(game_data):
                     current_round["mission_execution"]["success"] = success
                     # Also store simplified mission result for badge color
                     current_round["mission_result"] = {"success": success}
-            # 处理玩家移动
-            elif event_type == "Move":
-                if isinstance(event_data, (int, list)) and len(event_data) == 2:
-                    current_round["events"].append(
-                        {
-                            "type": "move",
-                            "data": {
-                                "player_id": int(event_data[0]),
-                                "valid_moves": deepcopy(event_data[1][0]),
-                                "new_pos": deepcopy(event_data[1][1]),
-                            },
-                        }
-                    )
 
     # Convert dict to list and sort by round number
     game_events_list = sorted(events_by_round.values(), key=lambda x: x["round"])
@@ -712,232 +585,3 @@ def process_game_events(game_data):
         )
 
     return game_events_list
-
-
-def extract_player_movements(game_data):
-    """提取玩家移动轨迹数据 (基于 observer.py)"""
-    movements_by_player = {}
-    current_round_num = 0
-
-    # 处理所有事件前，先确保玩家列表初始化
-    # 1. 初始化玩家列表（处理所有RoleAssign事件）
-    for event in game_data:
-        if event.get("event_type") == "RoleAssign":
-            event_data = event.get("event_data")
-            if isinstance(event_data, dict):
-                for player_id in event_data.keys():
-                    player_id_str = str(player_id)
-                    if player_id_str not in movements_by_player:
-                        movements_by_player[player_id_str] = []
-
-    # 2. 处理DefaultPositions事件（动态补充未初始化的玩家）
-    for event in game_data:
-        if event.get("event_type") == "DefaultPositions":
-            event_data = event.get("event_data")
-            if isinstance(event_data, dict):
-                for player_id, pos in event_data.items():
-                    player_id_str = str(player_id)
-                    # 若玩家未初始化，补充初始化
-                    if player_id_str not in movements_by_player:
-                        movements_by_player[player_id_str] = []
-                    # 添加第0轮的位置（仅当不存在时）
-                    if not any(
-                        entry["round"] == 0
-                        for entry in movements_by_player[player_id_str]
-                    ):
-                        movements_by_player[player_id_str].append(
-                            {
-                                "round": 0,
-                                "position": (
-                                    deepcopy(pos) if isinstance(pos, list) else None
-                                ),
-                                "moves": [],
-                            }
-                        )
-
-    # 3. 处理回合和移动事件
-    for event in game_data:
-        event_type = event.get("event_type")
-        event_data = event.get("event_data")
-
-        if event_type == "RoundStart" and isinstance(event_data, int):
-            current_round_num = event_data
-            # 确保所有玩家都有当前回合的条目
-            for player_id in movements_by_player:
-                entries = movements_by_player[player_id]
-                if entries:
-                    last_entry = entries[-1]
-                    # 仅当当前回合尚未添加时创建新条目
-                    if last_entry["round"] != current_round_num:
-                        new_entry = {
-                            "round": current_round_num,
-                            "position": deepcopy(last_entry["position"]),
-                            "moves": [],
-                        }
-                        entries.append(new_entry)
-                else:
-                    # 若玩家无任何条目（异常情况），初始化一个空位置
-                    entries.append(
-                        {"round": current_round_num, "position": None, "moves": []}
-                    )
-
-        elif event_type == "Move":
-            if isinstance(event_data, list) and len(event_data) >= 2:
-                player_id = str(event_data[0])
-                move_details = event_data[1]
-                if isinstance(move_details, list) and len(move_details) >= 2:
-                    new_pos = move_details[1]
-                    if player_id in movements_by_player:
-                        entries = movements_by_player[player_id]
-                        if entries and entries[-1]["round"] == current_round_num:
-                            entries[-1]["position"] = deepcopy(new_pos)
-                            entries[-1]["moves"] = deepcopy(move_details[0])
-
-    return deepcopy(movements_by_player)
-
-
-@visualizer_bp.route("/api/tts/generate", methods=["POST"])
-@login_required
-def generate_tts():
-    """生成TTS语音文件的API端点"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"success": False, "error": "无效的请求数据"}), 400
-
-        text = data.get("text", "").strip()
-        player_id = data.get("player_id", "").strip()
-        battle_id = data.get("battle_id", "").strip()
-        roles = data.get("roles", {})
-
-        if not text or not player_id or not battle_id:
-            return jsonify({"success": False, "error": "缺少必需参数"}), 400
-
-        # 在主线程中更新角色映射（安全）
-        if roles:
-            tts_service.update_game_roles(roles)
-
-        # 检查文件是否已存在
-        voice_file_path = tts_service.get_voice_file_path(battle_id, text, player_id)
-        if voice_file_path.exists():
-            relative_path = (
-                f"/visualizer/api/tts/audio/{battle_id}/{voice_file_path.name}"
-            )
-            return jsonify(
-                {"success": True, "audio_url": relative_path, "cached": True}
-            )
-
-        # 后台线程函数 - 完全独立，不依赖Flask上下文
-        def generate_in_background(current_text, current_player_id, current_battle_id):
-            try:
-                # 直接调用TTS服务，不传递Flask应用实例
-                # TTS服务会使用Python标准日志或print输出
-                result = tts_service.generate_voice_sync(
-                    current_text,
-                    current_player_id,
-                    current_battle_id,
-                    app_context=None,  # 不传递Flask应用上下文
-                )
-
-                # 使用Python标准日志记录结果
-                import logging
-
-                logger = logging.getLogger(__name__)
-
-                if result:
-                    logger.info(f"TTS语音生成成功: {result}")
-                    print(f"TTS语音生成成功: {result}")  # 备用输出
-                else:
-                    logger.error(
-                        f"TTS语音生成失败: text={current_text}, player_id={current_player_id}"
-                    )
-                    print(
-                        f"TTS语音生成失败: text={current_text}, player_id={current_player_id}"
-                    )
-
-            except Exception as e:
-                import logging
-
-                logger = logging.getLogger(__name__)
-                logger.error(f"后台TTS生成出错: {str(e)}")
-                print(f"后台TTS生成出错: {str(e)}")
-
-        # 启动后台线程 - 只传递基本参数，不传递Flask对象
-        thread = threading.Thread(
-            target=generate_in_background, args=(text, player_id, battle_id)
-        )
-        thread.daemon = True
-        thread.start()
-
-        # 在主线程中记录启动信息
-        current_app.logger.info(
-            f"启动TTS后台生成任务: text={text[:20]}..., player_id={player_id}, battle_id={battle_id}"
-        )
-
-        return jsonify(
-            {
-                "success": True,
-                "generating": True,
-                "message": "语音正在生成中，请稍后重试",
-            }
-        )
-
-    except Exception as e:
-        current_app.logger.error(f"TTS API错误: {str(e)}")
-        return jsonify({"success": False, "error": "服务器内部错误"}), 500
-
-
-@visualizer_bp.route("/api/tts/audio/<battle_id>/<filename>")
-@login_required
-def serve_tts_audio(battle_id, filename):
-    """提供TTS音频文件的API端点"""
-    try:
-        # 构建文件路径
-        data_dir = current_app.config.get("DATA_DIR", "./data")
-        voice_dir = Path(data_dir) / "voice" / str(battle_id)
-        file_path = voice_dir / filename
-
-        # 检查文件是否存在
-        if not file_path.exists():
-            return jsonify({"error": "音频文件不存在"}), 404
-
-        # 检查文件扩展名
-        if not filename.lower().endswith(".mp3"):
-            return jsonify({"error": "不支持的音频格式"}), 400
-
-        # 返回音频文件
-        return send_file(
-            file_path,
-            mimetype="audio/mpeg",
-            as_attachment=False,
-            download_name=filename,
-        )
-
-    except Exception as e:
-        current_app.logger.error(f"提供TTS音频文件时出错: {str(e)}")
-        return jsonify({"error": "服务器内部错误"}), 500
-
-
-@visualizer_bp.route("/api/tts/check/<battle_id>/<filename>")
-@login_required
-def check_tts_audio(battle_id, filename):
-    """检查TTS音频文件是否存在的API端点"""
-    try:
-        # 构建文件路径
-        data_dir = current_app.config.get("DATA_DIR", "./data")
-        voice_dir = Path(data_dir) / "voice" / str(battle_id)
-        file_path = voice_dir / filename
-
-        exists = file_path.exists() and file_path.stat().st_size > 0
-
-        if exists:
-            relative_path = f"/visualizer/api/tts/audio/{battle_id}/{filename}"
-            return jsonify(
-                {"success": True, "exists": True, "audio_url": relative_path}
-            )
-        else:
-            return jsonify({"success": True, "exists": False})
-
-    except Exception as e:
-        current_app.logger.error(f"检查TTS音频文件时出错: {str(e)}")
-        return jsonify({"success": False, "error": "服务器内部错误"}), 500

@@ -49,17 +49,8 @@ EVIL_AWARE_ROLES = ["Morgana", "Assassin"]  # 互相了解的红方角色
 # 游戏常量
 PLAYER_COUNT = 7  # 玩家数量
 MISSION_MEMBER_COUNT = [2, 3, 3, 4, 4]  # 每轮任务需要的队员数
-MAP_SIZE = 9  # 地图大小
 MAX_MISSION_ROUNDS = 5  # 最大任务轮数
 MAX_VOTE_ROUNDS = 5  # 最大投票轮数
-HEARING_RANGE = {  # 听力范围（中心格周围的方格数）
-    "Merlin": 1,
-    "Percival": 1,
-    "Knight": 2,  # 骑士听力更大
-    "Morgana": 1,
-    "Assassin": 1,
-    "Oberon": 2,  # 奥伯伦听力更大
-}
 MAX_EXECUTION_TIME = 100
 
 
@@ -198,8 +189,6 @@ class AvalonReferee:
 
         # 游戏状态变量初始化
         self.roles = {}  # 角色分配 {1: "Merlin", 2: "Assassin", ...}
-        self.map_data = []  # 地图数据
-        self.player_positions = {}  # 玩家位置 {1: (x, y), 2: (x, y), ...}
         self.mission_results = []  # 任务结果 [True, False, ...]
         self.current_round = 0  # 当前任务轮次
         self.blue_wins = 0  # 蓝方胜利次数
@@ -396,7 +385,6 @@ class AvalonReferee:
                     # 验证Player类是否包含必要方法
                     required_methods = [
                         "set_player_index",
-                        "walk",
                         "say",
                         "mission_vote1",
                         "mission_vote2",
@@ -446,7 +434,6 @@ class AvalonReferee:
                         "Missing 'Player' class.",
                     )
                     return False
-
             except ImportError as e:
                 import traceback
 
@@ -537,7 +524,7 @@ class AvalonReferee:
         logger.info(f"Public and private log files initialized in {self.data_dir}")
 
     def init_game(self):
-        """初始化游戏：分配角色、初始化地图"""
+        """初始化游戏：分配角色"""
         logger.info("Initializing game: Assigning roles and map.")
         # 随机分配角色
         all_roles = BLUE_ROLES.copy()
@@ -554,8 +541,6 @@ class AvalonReferee:
             logger.info(f"Player {player_id} assigned role: {all_roles[player_id - 1]}")
         logger.info(f"Roles assigned: {self.roles}")
         self.battle_observer.make_snapshot("RoleAssign", self.roles)
-        # 初始化地图
-        self.init_map()
 
         # 记录初始信息到公共日志
         self.log_public_event(
@@ -563,36 +548,9 @@ class AvalonReferee:
                 "type": "game_start",
                 "game_id": self.game_id,
                 "player_count": PLAYER_COUNT,
-                "map_size": MAP_SIZE,
             }
         )
         logger.info("Game initialization complete.")
-
-    def init_map(self):
-        """初始化9x9地图并分配玩家初始位置"""
-        logger.info("Initializing map and player positions.")
-        # 创建空地图
-        self.map_data = [[" " for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
-
-        # 随机分配玩家位置（不重叠）
-        positions = []
-        for player_id in range(1, PLAYER_COUNT + 1):
-            while True:
-                x = random.randint(0, MAP_SIZE - 1)
-                y = random.randint(0, MAP_SIZE - 1)
-                if (x, y) not in positions:
-                    positions.append((x, y))
-                    self.player_positions[player_id] = (x, y)
-                    self.map_data[x][y] = str(player_id)
-                    break
-        logger.info(f"Player positions: {self.player_positions}")
-        self.battle_observer.make_snapshot("DefaultPositions", self.player_positions)
-
-        # 通知所有玩家地图信息
-        for player_id in range(1, PLAYER_COUNT + 1):
-            logger.debug(f"Sending map data to player {player_id}")
-            self.safe_execute(player_id, "pass_map", deepcopy(self.map_data))
-        logger.info("Map initialized and sent to players.")
 
     def night_phase(self):
         """夜晚阶段：各角色按照视野规则获取信息"""
@@ -812,32 +770,6 @@ class AvalonReferee:
             except GameTerminationError as e:
                 raise e
 
-            # 添加状态检查：玩家移动前
-            try:
-                check_battle_status()
-            except GameTerminationError as e:
-                raise e
-
-            # 3. 玩家移动
-            logger.info("Starting Movement phase.")
-            try:
-                self.conduct_movement()
-            except GameTerminationError as e:
-                raise e
-
-            # 添加状态检查：第二轮发言前
-            try:
-                check_battle_status()
-            except GameTerminationError as e:
-                raise e
-
-            # 4. 第二轮发言（有限听力范围）
-            logger.info("Starting Limited Speech phase.")
-            try:
-                self.conduct_limited_speech()
-            except GameTerminationError as e:
-                raise e
-
             # 添加状态检查：公投表决前
             try:
                 check_battle_status()
@@ -978,7 +910,7 @@ class AvalonReferee:
         logger.info(f"--- End of Mission Round {self.current_round} ---")
 
     def conduct_global_speech(self):
-        """进行全局发言（所有玩家都能听到）"""
+        """进行全局发言"""
         # 添加状态检查
         if (
             hasattr(self, "battle_status_checker")
@@ -1055,327 +987,6 @@ class AvalonReferee:
             {"type": "global_speech", "round": self.current_round, "speeches": speeches}
         )
         logger.info("Global Speech phase complete.")
-
-    def conduct_movement(self):
-        """执行玩家移动"""
-        # 添加状态检查
-        if (
-            hasattr(self, "battle_status_checker")
-            and self.battle_status_checker is not None
-        ):
-            if self.battle_status_checker.should_abort():
-                battle_status = self.battle_status_checker.get_battle_status(force=True)
-                logger.warning(
-                    f"Movement phase aborted: Battle state changed to '{battle_status}'"
-                )
-                raise GameTerminationError(
-                    f"Battle status changed to '{battle_status}'"
-                )
-
-        # 从队长开始，按编号顺序移动
-        ordered_players = [
-            (i - 1) % PLAYER_COUNT + 1
-            for i in range(self.leader_index, self.leader_index + PLAYER_COUNT)
-        ]
-        logger.debug(f"Movement order: {ordered_players}")
-
-        movements = []
-        # 清空地图上的玩家标记 (log this action)
-        logger.debug("Clearing player markers from map before movement.")
-        for x in range(MAP_SIZE):
-            for y in range(MAP_SIZE):
-                if self.map_data[x][y] in [str(i) for i in range(1, PLAYER_COUNT + 1)]:
-                    self.map_data[x][y] = " "
-
-        for player_id in ordered_players:
-            # 每个玩家移动前检查状态
-            if (
-                hasattr(self, "battle_status_checker")
-                and self.battle_status_checker is not None
-            ):
-                if self.battle_status_checker.should_abort():
-                    battle_status = self.battle_status_checker.get_battle_status(
-                        force=True
-                    )
-                    logger.warning(
-                        f"Movement interrupted: Battle state changed to '{battle_status}'"
-                    )
-                    raise GameTerminationError(
-                        f"Battle status changed to '{battle_status}'"
-                    )
-
-            # 告知玩家当前地图情况
-            self.safe_execute(player_id, "pass_position_data", self.player_positions)
-            logger.debug(f"Sending current map to player {player_id}.")
-
-            # 获取当前位置
-            current_pos = deepcopy(self.player_positions[player_id])
-            logger.debug(
-                f"Requesting movement from Player {player_id} at {current_pos}"
-            )
-
-            # 获取移动方向
-            directions = self.safe_execute(player_id, "walk")
-
-            if directions is None:  # 防止报错
-                directions = ()
-
-            if not isinstance(directions, tuple):
-                logger.error(
-                    f"Player {player_id} returned invalid directions type: {type(directions)}. No movement. It should be a tuple.",
-                )
-                self.suspend_game(
-                    "player_ruturn_ERROR",
-                    player_id,
-                    "walk",
-                    f"Returned invalid directions type: {type(directions)}, but it should be a tuple.",
-                )
-
-            # 最多移动3步
-            steps = len(directions)
-            if steps > 3:
-                logger.error(
-                    f"Player {player_id} returned invalid directions length: {len(directions)}. No movement. It should be at most 3.",
-                )
-                self.suspend_game(
-                    "player_ruturn_ERROR",
-                    player_id,
-                    "walk",
-                    f"Returned invalid directions length: {len(directions)}, but it should be at most 3.",
-                )
-
-            new_pos = current_pos
-
-            # 默认directions合法
-            # 保留valid_moves，最后用于格式化显示
-            valid_moves = []
-            logger.debug(f"Player {player_id} requested moves: {directions}")
-            for i in range(steps):
-                # 处理每个方向
-                if not isinstance(directions[i], str):
-                    logger.error(
-                        f"Returned invalid direction type: {type(directions[i])} in the movement {i} of the movements tuple, but it should be str, such as 'up', 'down', 'left', 'right'"
-                    )
-                    self.suspend_game(
-                        "player_ruturn_ERROR",
-                        player_id,
-                        "walk",
-                        f"Returned invalid direction type: {type(directions[i])} in the movement {i} of the movements tuple, but it should be str, such as 'up', 'down', 'left', 'right'",
-                    )
-
-                direction = directions[i].lower()
-
-                x, y = deepcopy(new_pos)
-
-                if direction == "up" and x > 0:
-                    new_pos = (x - 1, y)
-                    valid_moves.append("up")
-                elif direction == "down" and x < MAP_SIZE - 1:
-                    new_pos = (x + 1, y)
-                    valid_moves.append("down")
-                elif direction == "left" and y > 0:
-                    new_pos = (x, y - 1)
-                    valid_moves.append("left")
-                elif direction == "right" and y < MAP_SIZE - 1:
-                    new_pos = (x, y + 1)
-                    valid_moves.append("right")
-                else:
-                    # 无效移动，报错
-                    logger.error(
-                        f"Player {player_id} attempted invalid move: {direction} in the movement {i} of the movements tuple"
-                    )
-                    self.suspend_game(
-                        "player_ruturn_ERROR",
-                        player_id,
-                        "walk",
-                        f"Attempted invalid move: {direction} in the movement {i} of the movements tuple",
-                    )
-
-                # 检查是否与其他玩家重叠
-                if new_pos in [
-                    self.player_positions[pid]
-                    for pid in range(1, PLAYER_COUNT + 1)
-                    if pid != player_id
-                ]:
-                    # 回退到上一个位置
-                    logger.error(
-                        f"Player {player_id} attempted to move to occupied position: {deepcopy(new_pos)} in the movement {i} of the movements tuple"
-                    )
-                    self.suspend_game(
-                        "player_ruturn_ERROR",
-                        player_id,
-                        "walk",
-                        f"Attempted to move to occupied position: {deepcopy(new_pos)} in the movement {i} of the movements tuple",
-                    )
-
-                # 快照记录每一步移动与地图
-                self.battle_observer.make_snapshot(
-                    "Move",
-                    (
-                        player_id,
-                        [list(valid_moves), deepcopy(new_pos)],
-                    ),  # 或者 valid_moves.copy()
-                )
-
-            # 更新玩家位置
-            logger.info(
-                f"Movement - Player {player_id}: {current_pos} -> {deepcopy(new_pos)} via {valid_moves}"
-            )
-
-            self.player_positions[player_id] = deepcopy(new_pos)
-            x, y = deepcopy(new_pos)
-            self.map_data[x][y] = str(player_id)  # Place marker after all checks
-
-            movements.append(
-                {
-                    "player_id": player_id,
-                    "requested_moves": list(directions),  # Log requested moves
-                    "executed_moves": valid_moves,  # Log executed moves
-                    "final_position": deepcopy(new_pos),
-                }
-            )
-
-        # 再次检查状态
-        if (
-            hasattr(self, "battle_status_checker")
-            and self.battle_status_checker is not None
-        ):
-            if self.battle_status_checker.should_abort():
-                battle_status = self.battle_status_checker.get_battle_status(force=True)
-                logger.warning(
-                    f"Movement completion aborted: Battle state changed to '{battle_status}'"
-                )
-                raise GameTerminationError(
-                    f"Battle status changed to '{battle_status}'"
-                )
-
-        # 更新所有玩家的地图
-        logger.debug(
-            "Updating all players with the new map state and data of positions."
-        )
-        for player_id in range(1, PLAYER_COUNT + 1):
-            # 传递给玩家两种数据
-            self.safe_execute(player_id, "pass_position_data", self.player_positions)
-            self.safe_execute(player_id, "pass_map", deepcopy(self.map_data))
-
-        # 记录移动
-        self.log_public_event(
-            {"type": "movement", "round": self.current_round, "movements": movements}
-        )
-
-        self.battle_observer.make_snapshot("Positions", self.player_positions)
-
-        logger.info("Movement phase complete.")
-
-    def conduct_limited_speech(self):
-        """进行有限范围发言（只有在听力范围内的玩家能听到）"""
-        # 添加状态检查
-        if (
-            hasattr(self, "battle_status_checker")
-            and self.battle_status_checker is not None
-        ):
-            if self.battle_status_checker.should_abort():
-                battle_status = self.battle_status_checker.get_battle_status(force=True)
-                logger.warning(
-                    f"Limited speech aborted: Battle state changed to '{battle_status}'"
-                )
-                raise GameTerminationError(
-                    f"Battle status changed to '{battle_status}'"
-                )
-
-        # 从队长开始，按编号顺序发言
-        ordered_players = [
-            (i - 1) % PLAYER_COUNT + 1
-            for i in range(self.leader_index, self.leader_index + PLAYER_COUNT)
-        ]
-        logger.debug(f"Limited speech order: {ordered_players}")
-
-        speeches = []
-        for speaker_id in ordered_players:
-            # 每个玩家发言前检查状态
-            if (
-                hasattr(self, "battle_status_checker")
-                and self.battle_status_checker is not None
-            ):
-                if self.battle_status_checker.should_abort():
-                    battle_status = self.battle_status_checker.get_battle_status(
-                        force=True
-                    )
-                    logger.warning(
-                        f"Limited speech interrupted: Battle state changed to '{battle_status}'"
-                    )
-                    raise GameTerminationError(
-                        f"Battle status changed to '{battle_status}'"
-                    )
-
-            logger.debug(f"Requesting limited speech from Player {speaker_id}")
-            speech = self.safe_execute(speaker_id, "say")
-
-            if not isinstance(speech, str):
-                logger.error(
-                    f"Player {speaker_id} returned non-string speech: {type(speech)}. It should be str.",
-                    exc_info=True,  # Include traceback in log
-                )
-                self.suspend_game(
-                    "player_ruturn_ERROR",
-                    speaker_id,
-                    "say",
-                    f"Returned non-string speech: {type(speech)} during limited speech, but it should be str.",
-                )
-
-            logger.info(f"Limited Speech - Player {speaker_id}: {speech}")
-
-            speeches.append((speaker_id, speech))
-
-            # 确定能听到的玩家
-            hearers = self.get_players_in_hearing_range(speaker_id)
-            logger.debug(f"Player {speaker_id}'s speech heard by: {hearers}")
-
-            # 通知能听到的玩家
-            for hearer_id in hearers:
-                if hearer_id != speaker_id:  # 不需要通知发言者自己
-                    self.safe_execute(hearer_id, "pass_message", (speaker_id, speech))
-
-            self.battle_observer.make_snapshot(
-                "PrivateSpeech",
-                (
-                    speaker_id,
-                    speech,
-                    " ".join(map(str, hearers)),
-                ),
-            )
-
-        # 记录有限范围发言
-        self.log_public_event(
-            {
-                "type": "limited_speech",
-                "round": self.current_round,
-                # "speeches": speeches,  这里的speech不能人尽皆知
-            }
-        )
-        logger.info("Limited Speech phase complete.")
-
-    def get_players_in_hearing_range(self, speaker_id: int) -> List[int]:
-        """获取能听到指定玩家发言的所有玩家ID (修改版，原版的“曼哈顿距离”不符合游戏规则)"""
-        hearers = []
-        speaker_x, speaker_y = self.player_positions[speaker_id]
-
-        for player_id in range(1, PLAYER_COUNT + 1):
-            player_x, player_y = self.player_positions[player_id]
-
-            # 计算水平/垂直距离的最大值
-            distance = max(abs(player_x - speaker_x), abs(player_y - speaker_y))
-
-            # 获取角色和对应的听力范围
-            role = self.roles[player_id]
-            hearing_range = HEARING_RANGE.get(role, 1)
-
-            # 如果在听力范围内，加入听者列表
-            # 解释：如果上面的水平/垂直距离的最大值不大于对应角色的 HEARING_RANGE 那就可以听到
-            if distance <= hearing_range:
-                hearers.append(player_id)
-
-        return hearers
 
     def conduct_public_vote(self, mission_members: List[int]) -> int:
         """
@@ -1979,10 +1590,7 @@ class AvalonReferee:
             )
 
             start_time = time.time()
-            # Capture stdout/stderr from player code if needed
-            # stdout_capture = StringIO()
-            # stderr_capture = StringIO()
-            # with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+
             result = method(*args, **kwargs)
             execution_time = time.time() - start_time
             post_context_player_id = self.game_helper.get_current_player_id()
@@ -1992,10 +1600,6 @@ class AvalonReferee:
                 self.suspend_game(
                     "critical_context_ERROR", player_id, method_name, error_msg
                 )
-            # player_stdout = stdout_capture.getvalue()
-            # player_stderr = stderr_capture.getvalue()
-            # if player_stdout: logger.debug(f"Player {player_id} stdout: {player_stdout.strip()}")
-            # if player_stderr: logger.warning(f"Player {player_id} stderr: {player_stderr.strip()}")
 
             logger.debug(
                 f"Player {player_id}.{method_name} returned: {result} (took {execution_time:.4f}s)"

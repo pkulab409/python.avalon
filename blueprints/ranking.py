@@ -69,7 +69,6 @@ def get_all_ranking_ids():
 
 
 @ranking_bp.route("/")
-@login_required
 def show_ranking():
     """显示排行榜页面"""
     current_app.logger.debug("--- Entering show_ranking ---")
