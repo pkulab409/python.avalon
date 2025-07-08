@@ -138,7 +138,6 @@ def game_replay(game_id):
         # 处理游戏事件
         game_events = process_game_events(game_data)
 
-
         # 在返回模板之前清理数据
         game_events = clean_undefined_objects(game_events)
         game_info = clean_undefined_objects(game_info)
@@ -319,7 +318,9 @@ def extract_game_info(game_data, game_id_from_url):
         # 从游戏结束事件提取信息
         elif event_type == "GameResult":
             if isinstance(event_data, (list, tuple)) and len(event_data) >= 2:
-                game_info["winner"] = event_data[0].lower()  # Ensure lowercase 'blue' or 'red'
+                game_info["winner"] = event_data[
+                    0
+                ].lower()  # Ensure lowercase 'blue' or 'red'
                 game_info["win_reason"] = event_data[1]
                 game_info["end_time"] = timestamp  # Use event timestamp
                 game_info["is_completed"] = True

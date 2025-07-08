@@ -1,23 +1,21 @@
 {% extends "base.html" %}
 {% block title %}
-    对局重放 - {{ game_id }}
+对局重放 - {{ game_id }}
 {% endblock title %}
 {% block styles %}
-    <link rel="stylesheet" href="../../static/css/medieval.css">
-    {{ super() }}
-    <style>
+<link rel="stylesheet" href="../../static/css/medieval.css">
+{{ super() }}
+<style>
     /* 基础响应式设置 */
     :root {
         --sidebar-width: 300px;
         --chat-width: 600px;
-        --map-width: 300px;
     }
 
     @media (max-width: 768px) {
         :root {
             --sidebar-width: 100%;
             --chat-width: 100%;
-            --map-width: 100%;
         }
     }
 
@@ -106,6 +104,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -116,6 +115,7 @@
         from {
             opacity: 0;
         }
+
         to {
             opacity: 1;
         }
@@ -125,6 +125,7 @@
         from {
             width: 0%;
         }
+
         to {
             width: 100%;
         }
@@ -197,136 +198,6 @@
         .message-bubble {
             padding: 6px 10px;
             font-size: 0.9rem;
-        }
-    }
-
-    /* 玩家头像样式 */
-    .player-avatar {
-        width: 72px;
-        height: 96px;
-        border-radius: 50%;
-        margin-right: 8px;
-        margin-left: 8px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: white;
-        font-size: 0.9rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        border: 2px solid #fff;
-        background-size: 300%;
-        background-position: center 20%;
-        background-repeat: no-repeat;
-        overflow: hidden;
-    }
-
-    .player-avatar.role-merlin {
-        background-image: url('../../static/images/merlin.jpg');
-    }
-
-    .player-avatar.role-percival {
-        background-image: url('../../static/images/percival.jpg');
-    }
-
-    .player-avatar.role-knight1 {
-        background-image: url('../../static/images/knight1.jpg');
-    }
-
-    .player-avatar.role-knight2 {
-        background-image: url('../../static/images/knight2.jpg');
-    }
-
-    .player-avatar.role-assassin {
-        background-image: url('../../static/images/assassin.jpg');
-    }
-
-    .player-avatar.role-morgana {
-        background-image: url('../../static/images/morgana.jpg');
-    }
-
-    .player-avatar.role-oberon {
-        background-image: url('../../static/images/oberon.jpg');
-    }
-
-    /* 如果没有找到对应角色图片，使用默认的彩色背景 */
-    .player-avatar.blue {
-        background-color: #4A6B8A;
-    }
-
-    .player-avatar.red {
-        background-color: #8B0000;
-    }
-
-    .player-avatar.unknown {
-        background-color: #6c757d;
-    }
-
-    @media (max-width: 768px) {
-        .player-avatar {
-            width: 40px;
-            height: 28px;
-            margin-right: 6px;
-            margin-left: 6px;
-            font-size: 0.8rem;
-            border-radius: 50%;
-            background-size: 200%;
-            background-position: center 30%;
-        }
-    }
-
-    /* TTS播放按钮样式 */
-    .tts-play-btn {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: none;
-        background: #007bff;
-        color: white;
-        font-size: 10px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        transition: all 0.2s ease;
-        z-index: 10;
-    }
-
-    .tts-play-btn:hover {
-        background: #0056b3;
-        transform: scale(1.1);
-    }
-
-    .tts-play-btn:disabled {
-        background: #6c757d;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .tts-play-btn.loading {
-        background: #ffc107;
-        animation: pulse 1.5s infinite;
-    }
-
-    .tts-play-btn.playing {
-        background: #28a745;
-        animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-        0% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.5;
-        }
-        100% {
-            opacity: 1;
         }
     }
 
@@ -437,113 +308,6 @@
         max-height: calc(100vh - 100px);
     }
 
-    /* 地图样式 */
-    .game-map {
-        display: grid;
-        grid-template-columns: repeat({{ map_size }}, 1fr);
-        grid-template-rows: repeat({{ map_size }}, 1fr);
-        gap: 0px;
-        padding: 5px;
-        border-radius: 4px;
-        max-width: 100%;
-        margin: 0 auto;
-        border: 3px solid #9e8a5d;
-        background-image: url('../../static/images/map-background.png');
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-
-    @media (max-width: 768px) {
-        .game-map {
-            max-width: 100%;
-            margin: 0.5rem auto;
-        }
-
-        .map-cell {
-            font-size: 0.6rem;
-        }
-
-        .player-token {
-            width: 90%;
-            height: 90%;
-            font-size: 0.7rem;
-        }
-    }
-
-    .map-cell {
-        aspect-ratio: 1;
-        border: 1.3px solid #9e8a5d;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        font-weight: bold;
-        font-size: 0.7rem;
-        background-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .player-token {
-        width: 85%;
-        height: 85%;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 0.8rem;
-        box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-        cursor: help;
-    }
-
-    .player-blue {
-        background-color: #4A6B8A;
-    }
-
-    .player-red {
-        background-color: #8B0000;
-    }
-
-    .player-unknown {
-        background-color: #6c757d;
-    }
-
-    /* 其他样式保持不变 */
-    .bg-success-light {
-        background-color: #d1e7dd;
-    }
-
-    .bg-danger-light {
-        background-color: #f8d7da;
-    }
-
-    .tooltip-icon {
-        margin-left: 5px;
-        cursor: help;
-    }
-
-    .role-icon {
-        width: 24px;
-        height: 24px;
-        margin-right: 5px;
-    }
-
-    /* 私有发言样式 */
-    .message-bubble.private-speech {
-        border-style: dashed;
-        background-color: rgba(200, 200, 200, 0.3);
-    }
-
-    .speech-badge,
-    .hearers-tags {
-        display: inline-block;
-        margin-right: 2px;
-        font-size: 0.65rem;
-        margin-left: 5px;
-        vertical-align: middle;
-    }
-
     h4,
     h5 {
         color: #ffffff;
@@ -556,126 +320,6 @@
         transition: background 0.3s;
         transform: scale(1.02);
         box-shadow: 0 2px 8px rgba(255, 224, 130, 0.5) !important;
-    }
-
-    /* 移动消息交互样式 */
-    .move-message {
-        transition: all 0.3s ease;
-    }
-
-    .move-message:hover {
-        background-color: #f8f9fa !important;
-        transform: scale(1.02);
-        cursor: pointer;
-        border: 1px solid #007bff;
-    }
-
-    .highlighted-move {
-        background-color: #fff3cd !important;
-        border: 2px solid #ffc107 !important;
-        transform: scale(1.02);
-        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
-    }
-
-    /* 刺杀成功动画样式 */
-    .assassination-success-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(139, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        animation: assassinationFadeIn 1s ease forwards;
-    }
-
-    .assassination-title {
-        font-size: clamp(3rem, 8vw, 6rem);
-        color: #ff0000;
-        text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 60px #ff0000;
-        margin-bottom: 2rem;
-        opacity: 0;
-        transform: scale(0.3) translateY(50px);
-        animation: assassinationTitleAppear 2s ease 0.5s forwards;
-    }
-
-    .assassination-subtitle {
-        font-size: clamp(1.5rem, 4vw, 2.5rem);
-        color: #ffffff;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-        margin-bottom: 1rem;
-        opacity: 0;
-        transform: translateY(50px);
-        animation: assassinationSubtitleAppear 1.5s ease 1.5s forwards;
-    }
-
-    .assassination-details {
-        font-size: clamp(1rem, 2vw, 1.2rem);
-        color: #cccccc;
-        text-align: center;
-        max-width: 600px;
-        line-height: 1.6;
-        opacity: 0;
-        transform: translateY(30px);
-        animation: assassinationDetailsAppear 1s ease 2.5s forwards;
-    }
-
-    .blood-effect {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: 
-            radial-gradient(circle at 20% 30%, rgba(139, 0, 0, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 70%, rgba(139, 0, 0, 0.2) 0%, transparent 40%),
-            radial-gradient(circle at 60% 20%, rgba(139, 0, 0, 0.4) 0%, transparent 30%);
-        animation: bloodPulse 3s ease-in-out infinite;
-    }
-
-    .dagger-icon {
-        position: absolute;
-        top: 20%;
-        right: 15%;
-        font-size: 4rem;
-        color: #c0c0c0;
-        transform: rotate(45deg) scale(0);
-        animation: daggerStrike 2s ease 1s forwards;
-    }
-
-    .victory-crown {
-        position: absolute;
-        top: 15%;
-        left: 15%;
-        font-size: 3rem;
-        color: #ffd700;
-        transform: scale(0) rotate(-180deg);
-        animation: crownAppear 1.5s ease 2s forwards;
-    }
-
-    .close-animation-btn {
-        position: absolute;
-        bottom: 5%;
-        right: 5%;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid #ffffff;
-        color: #ffffff;
-        padding: 0.8rem 1.5rem;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        opacity: 0;
-        animation: closeButtonAppear 0.5s ease 3.5s forwards;
-    }
-
-    .close-animation-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: scale(1.05);
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
     }
 
     /* 胜利横幅动画样式 */
@@ -904,63 +548,13 @@
         }
     }
 
-    /* 超小屏幕优化 */
-    @media (max-width: 480px) {
-        .victory-banner {
-            min-height: 70px;
-            padding: 10px 15px;
-            transform: translateY(-50%) rotate(-1deg);
-            border-radius: 8px;
-        }
-
-        .victory-content {
-            padding: 0 0.3rem;
-            max-width: 95%;
-        }
-
-        .victory-title {
-            font-size: clamp(1rem, 6vw, 1.5rem);
-            line-height: 1.1;
-            letter-spacing: 0px;
-        }
-
-        .victory-subtitle {
-            font-size: clamp(0.7rem, 3vw, 0.9rem);
-        }
-
-        .victory-reason {
-            font-size: clamp(0.6rem, 2.5vw, 0.7rem);
-            line-height: 1.2;
-            max-width: 98%;
-        }
-
-        .victory-icon {
-            font-size: clamp(1rem, 4.5vw, 1.3rem);
-        }
-
-        .victory-icon.left {
-            left: 5%;
-        }
-
-        .victory-icon.right {
-            right: 5%;
-        }
-
-        .victory-close-btn {
-            top: 5px;
-            right: 8px;
-            width: 24px;
-            height: 24px;
-            font-size: 0.9rem;
-        }
-    }
-
-    /* 添加动画关键帧 - 确保滑入动画正确 */
+    /* 添加动画关键帧 */
     @keyframes victorySlideIn {
         0% {
             left: -100%;
             opacity: 0;
         }
+
         100% {
             left: 0;
             opacity: 1;
@@ -972,6 +566,7 @@
             left: 0;
             opacity: 1;
         }
+
         100% {
             left: 100%;
             opacity: 0;
@@ -983,6 +578,7 @@
             opacity: 0;
             transform: scale(0.5) translateY(20px);
         }
+
         100% {
             opacity: 1;
             transform: scale(1) translateY(0);
@@ -994,6 +590,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         100% {
             opacity: 1;
             transform: translateY(0);
@@ -1005,6 +602,7 @@
             opacity: 0;
             transform: translateY(15px);
         }
+
         100% {
             opacity: 1;
             transform: translateY(0);
@@ -1016,6 +614,7 @@
             opacity: 0;
             transform: translateY(-50%) rotate(-180deg) scale(0);
         }
+
         100% {
             opacity: 1;
             transform: translateY(-50%) rotate(0deg) scale(1);
@@ -1027,6 +626,7 @@
             opacity: 0;
             transform: scale(0.5);
         }
+
         100% {
             opacity: 1;
             transform: scale(1);
@@ -1038,12 +638,15 @@
             opacity: 0;
             top: -10px;
         }
+
         10% {
             opacity: 1;
         }
+
         90% {
             opacity: 1;
         }
+
         100% {
             opacity: 0;
             top: 110%;
@@ -1051,13 +654,27 @@
     }
 
     @keyframes blueShimmer {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+
+        0%,
+        100% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
     }
 
     @keyframes redShimmer {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+
+        0%,
+        100% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
     }
 
     /* 聊天记录滚动条样式 */
@@ -1118,10 +735,6 @@
             overflow-y: visible;
         }
 
-        .decorative-border {
-            margin-bottom: 0.5rem;
-        }
-
         .vote-info {
             padding: 0.5rem;
             margin: 0.5rem 0;
@@ -1138,11 +751,6 @@
 
         .player-tag {
             font-size: 0.7rem;
-        }
-
-        .speech-badge,
-        .hearers-tags {
-            font-size: 0.6rem;
         }
 
         .card-footer {
@@ -1167,1362 +775,654 @@
             margin-bottom: 0.5rem;
         }
     }
-    </style>
+</style>
 {% endblock styles %}
 {% block content %}
-    <!-- 开场动画 -->
-    <div class="intro-animation" id="introAnimation">
-        <div class="intro-content">
-            <h1 class="intro-title">阿瓦隆</h1>
-            <p class="intro-subtitle">对局重放</p>
-            <div class="loading-bar">
-                <div class="loading-progress"></div>
-            </div>
+<!-- 开场动画 -->
+<div class="intro-animation" id="introAnimation">
+    <div class="intro-content">
+        <h1 class="intro-title">阿瓦隆</h1>
+        <p class="intro-subtitle">对局重放</p>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
         </div>
     </div>
-    <!-- 移动端导航切换按钮 -->
-    <div class="d-lg-none mb-2">
-        <div class="btn-group w-100" role="group">
-            <button type="button" class="btn btn-outline-primary active" data-view="main">游戏进程</button>
-            <button type="button" class="btn btn-outline-primary" data-view="info">游戏信息</button>
-        </div>
+</div>
+<!-- 移动端导航切换按钮 -->
+<div class="d-lg-none mb-2">
+    <div class="btn-group w-100" role="group">
+        <button type="button" class="btn btn-outline-primary active" data-view="main">游戏进程</button>
+        <button type="button" class="btn btn-outline-primary" data-view="info">游戏信息</button>
     </div>
-    <div class="container-fluid mt-3">
-        <div class="row">
-            <!-- 左侧边栏：游戏信息和角色列表 -->
-            <div class="col-lg-3 col-md-4 mobile-view" id="infoView">
-                <div class="sidebar">
-                    <!-- 游戏信息卡片 -->
-                    <div class="decorative-border">
-                        <div class="card shadow-sm mb-0">
-                            <div class="card-header bg-primary text-white py-2">
-                                <h5 class="mb-0 fs-6">对局信息</h5>
-                            </div>
-                            <div class="card-body p-2">
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>游戏ID</small>
-                                        <span class="badge bg-secondary rounded-pill">{{ game_id }}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>状态</small>
-                                        <span class="badge rounded-pill {% if game_info.winner == 'blue' %}bg-info text-dark{% elif game_info.winner == 'red' %}bg-danger{% else %}bg-secondary{% endif %}">
-                                            {{ "蓝方胜利" if game_info.winner == "blue" else ("红方胜利" if game_info.winner == "red" else "未结束") }}
-                                        </span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>原因</small>
-                                        <small class="text-muted text-end">{{ game_info.win_reason | truncate(30) }}</small>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>开始时间</small>
-                                        <small class="text-muted">{{ game_info.start_time_formatted }}</small>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>结束时间</small>
-                                        <small class="text-muted">{{ game_info.end_time_formatted }}</small>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>时长</small>
-                                        <small class="text-muted">{{ game_info.duration }}</small>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
-                                        <small>最终得分</small>
-                                        <div>
-                                            <span class="badge bg-info text-dark me-1">{{ game_info.blue_wins }}</span>
-                                            <span class="badge bg-danger">{{ game_info.red_wins }}</span>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+</div>
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- 左侧边栏：游戏信息和角色列表 -->
+        <div class="col-lg-3 col-md-4 mobile-view" id="infoView">
+            <div class="sidebar">
+                <!-- 游戏信息卡片 -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h5 class="mb-0 fs-6">对局信息</h5>
                     </div>
-                    <!-- 角色列表 -->
-                    <div class="decorative-border">
-                        <div class="card shadow-sm mb-0">
-                            <div class="card-header bg-primary text-white py-2">
-                                <h5 class="mb-0 fs-6">角色列表 ({{ game_info.player_count }}人)</h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-striped table-bordered mb-0 small">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>玩家</th>
-                                                <th>用户名</th>
-                                                <th>角色</th>
-                                                <th>阵营</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for player_id, role in game_info.roles.items() | sort %}
-                                                {% set player_id_str = player_id | string %}
-                                                <tr>
-                                                    <td class="text-center">{{ player_id_str }}</td>
-                                                    {% if player_usernames %}
-                                                        <td>{{ player_usernames[player_id|int - 1] }}</td>
-                                                    {% else %}
-                                                        <td>未知</td>
-                                                    {% endif %}
-                                                    <td>
-                                                        {% set role_name = role %}
-                                                        {% set is_blue = role in ["Merlin", "Percival", "Knight"] %}
-                                                        {% if role == "Merlin" %}
-                                                            梅林
-                                                        {% elif role == "Percival" %}
-                                                            派西维尔
-                                                        {% elif role == "Knight" %}
-                                                            骑士
-                                                        {% elif role == "Assassin" %}
-                                                            刺客
-                                                        {% elif role == "Morgana" %}
-                                                            莫甘娜
-                                                        {% elif role == "Mordred" %}
-                                                            莫德雷德
-                                                        {% elif role == "Oberon" %}
-                                                            奥伯伦
-                                                        {% else %}
-                                                            {{ role }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        {% if is_blue %}
-                                                            <span class="badge bg-info text-dark">蓝方</span>
-                                                        {% else %}
-                                                            <span class="badge bg-danger">红方</span>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
+                    <div class="card-body p-2">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
+                                <small>游戏ID</small>
+                                <span class="badge bg-secondary rounded-pill">{{ game_id }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
+                                <small>状态</small>
+                                <span
+                                    class="badge rounded-pill {% if game_info.winner == 'blue' %}bg-info text-dark{% elif game_info.winner == 'red' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ "蓝方胜利" if game_info.winner == "blue" else ("红方胜利" if game_info.winner == "red"
+                                    else "未结束") }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-0">
+                                <small>原因</small>
+                                <small class="text-muted text-end">{{ game_info.win_reason | truncate(30) if
+                                    game_info.win_reason else '未知' }}</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 角色列表 -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h5 class="mb-0 fs-6">角色列表 ({{ game_info.player_count if game_info.player_count else
+                            game_info.roles|length }}人)</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped table-bordered mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>玩家</th>
+                                        <th>用户名</th>
+                                        <th>角色</th>
+                                        <th>阵营</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player_id, role in game_info.roles.items() | sort %}
+                                    {% set player_id_str = player_id | string %}
+                                    <tr>
+                                        <td class="text-center">{{ player_id_str }}</td>
+                                        {% if player_usernames %}
+                                        <td>{{ player_usernames[player_id|int - 1] if player_usernames|length >=
+                                            player_id|int else '未知' }}</td>
+                                        {% else %}
+                                        <td>未知</td>
+                                        {% endif %}
+                                        <td>
+                                            {% set is_blue = role in ["Merlin", "Percival", "Knight"] %}
+                                            {% if role == "Merlin" %}
+                                            梅林
+                                            {% elif role == "Percival" %}
+                                            派西维尔
+                                            {% elif role == "Knight" %}
+                                            骑士
+                                            {% elif role == "Assassin" %}
+                                            刺客
+                                            {% elif role == "Morgana" %}
+                                            莫甘娜
+                                            {% elif role == "Mordred" %}
+                                            莫德雷德
+                                            {% elif role == "Oberon" %}
+                                            奥伯伦
                                             {% else %}
-                                                <tr>
-                                                    <td colspan="4" class="text-center text-muted">角色信息不可用</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                            {{ role }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if is_blue %}
+                                            <span class="badge bg-info text-dark">蓝方</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">红方</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">角色信息不可用</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- 中央：聊天记录主体和地图 -->
-            <div class="col-lg-9 col-md-8 mobile-view" id="mainView">
-                <div class="row">
-                    <!-- 聊天记录 -->
-                    <div class="col-lg-8">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
-                                <h4 class="mb-0 fs-6">对局流程</h4>
-                                <span class="badge bg-light text-dark" id="currentRoundBadge">初始状态</span>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="chat-container" id="chatContainer">
-                                    <!-- 初始化提示 -->
-                                    <div class="text-center my-5 text-muted">
-                                        <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
-                                        <p>加载对局流程中...</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-footer py-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">自动跳动回放</small>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-secondary"
-                                                id="scrollToBottomBtn"
-                                                title="滚动到底部">
-                                            <i class="bi bi-arrow-down-circle"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info ms-1"
-                                                id="manualNextBtn"
-                                                title="手动下一步">
-                                            <i class="bi bi-skip-end-fill"></i>
-                                        </button>
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-primary ms-2"
-                                                id="autoplayBtnFlow">
-                                            <i class="bi bi-play-fill"></i> 自动播放
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+        </div>
+        <!-- 中央：聊天记录主体 -->
+        <div class="col-lg-9 col-md-8 mobile-view" id="mainView">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 fs-6">对局流程</h4>
+                    <span class="badge bg-light text-dark" id="currentRoundBadge">初始状态</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="chat-container" id="chatContainer">
+                        <!-- 初始化提示 -->
+                        <div class="text-center my-5 text-muted">
+                            <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                            <p>加载对局流程中...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">自动跳动回放</small>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" id="scrollToBottomBtn" title="滚动到底部">
+                                <i class="bi bi-arrow-down-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info ms-1" id="manualNextBtn" title="手动下一步">
+                                <i class="bi bi-skip-end-fill"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="autoplayBtnFlow">
+                                <i class="bi bi-play-fill"></i> 自动播放
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock content %}
 {% block scripts %}
-    {{ super() }}
-    <script>
+{{ super() }}
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         // --- 自动逐条跳动回放 ---
         let isAutoReplay = false;
         let autoReplayTimeout = null;
-        let currentReplayMsgIndex = 0; // 当前播放位置，不再重置为0
+        let currentReplayMsgIndex = 0;
 
-        function getAllReplayMessages() {
-            return Array.from(chatContainer.querySelectorAll('.message-bubble, .message-system, .move-message'));
-        }
-
-        function getMessageDelay(msgElem) {
-            let text = '';
-            let baseDelay = 1000;
-            
-            if (msgElem.classList.contains('message-bubble')) {
-                text = msgElem.innerText || msgElem.textContent || '';
-                baseDelay = 1500;
-            } else if (msgElem.classList.contains('message-system')) {
-                text = msgElem.innerText || msgElem.textContent || '';
-                baseDelay = 800;
-            } else if (msgElem.classList.contains('move-message')) {
-                text = msgElem.innerText || msgElem.textContent || '';
-                baseDelay = 600;
-            }
-            
-            // 计算文本长度（中文字符和英文字符分别计算）
-            const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
-            const otherChars = text.length - chineseChars;
-            
-            // 中文字符阅读时间更长
-            const chineseReadTime = chineseChars * 120; // 每个中文字符120ms
-            const otherReadTime = otherChars * 40;      // 每个其他字符40ms
-            
-            // 计算总延迟时间
-            let totalDelay = baseDelay + chineseReadTime + otherReadTime;
-            
-            // 根据消息类型调整范围
-            if (msgElem.classList.contains('message-bubble')) {
-                totalDelay = Math.max(1500, Math.min(6000, totalDelay));
-            } else if (msgElem.classList.contains('message-system')) {
-                totalDelay = Math.max(800, Math.min(4000, totalDelay));
-            } else if (msgElem.classList.contains('move-message')) {
-                totalDelay = Math.max(600, Math.min(2000, totalDelay));
-            } else {
-                totalDelay = Math.max(500, Math.min(5000, totalDelay));
-            }
-            
-            return totalDelay;
-        }
-
-        // 手动下一步功能
-        function manualNextStep() {
-            const messages = getAllReplayMessages();
-            if (currentReplayMsgIndex >= messages.length) {
-                currentReplayMsgIndex = messages.length - 1;
-                return;
-            }
-            
-            // 停止自动播放
-            if (isAutoReplay) {
-                stopAutoReplay();
-            }
-            
-            // 执行下一步
-            executeReplayStep(messages);
-            currentReplayMsgIndex++;
-            
-            // 更新按钮状态
-            updateManualButtons(messages.length);
-        }
-
-        // 执行播放步骤（分离出来供自动和手动共用）
-        function executeReplayStep(messages) {
-            if (currentReplayMsgIndex >= messages.length) {
-                return false;
-            }
-            
-            const msg = messages[currentReplayMsgIndex];
-            
-            // 滚动到当前消息
-            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // 移除之前的高亮
-            messages.forEach(m => m.classList.remove('auto-replay-active'));
-            msg.classList.add('auto-replay-active');
-
-            // 如果是移动消息，更新地图
-            if (msg.classList.contains('move-message')) {
-                const moveIndex = parseInt(msg.dataset.moveIndex);
-                if (!isNaN(moveIndex)) {
-                    renderMapByMoveIndex(moveIndex);
-                }
-            }
-            
-            // 检查是否是刺杀成功消息
-            checkForAssassinationSuccess(msg);
-            
-            // 检查是否是胜利消息
-            checkForVictory(msg);
-            
-            return true;
-        }
-
-        // 修复 checkForAssassinationSuccess 函数 - 保留自动播放时的动画触发
-        function checkForAssassinationSuccess(msgElement) {
-            const text = msgElement.textContent || msgElement.innerText || '';
-            
-            // 检查是否包含刺杀成功的信息
-            if (text.includes('刺杀') && text.includes('成功')) {
-                console.log('检测到刺杀成功消息，准备播放动画');
-                
-                // 延迟播放动画，让用户先看到刺杀结果
-                setTimeout(() => {
-                    // 从全局游戏数据中找到刺杀信息
-                    const assassinationEvent = gameEvents.find(event => 
-                        event.round === 'assassination' && event.assassination && event.assassination.success
-                    );
-                    
-                    if (assassinationEvent) {
-                        const assassinInfo = getPlayerInfo(assassinationEvent.assassination.assassin);
-                        const targetInfo = getPlayerInfo(assassinationEvent.assassination.target);
-                        showAssassinationSuccessAnimation(assassinInfo, targetInfo, assassinationEvent.assassination.target_role);
-                    }
-                }, 1000);
-            }
-        }
-
-        // 在 checkForAssassinationSuccess 函数后添加胜利检测
-        function checkForVictory(msgElement) {
-            const text = msgElement.textContent || msgElement.innerText || '';
-            
-            if (text.includes('胜利')) {
-                setTimeout(function() {
-                    if (text.includes('蓝方胜利')) {
-                        showVictoryBanner('blue', '🔵 蓝方胜利', '正义与智慧的胜利', gameInfo.win_reason);
-                    } else if (text.includes('红方胜利')) {
-                        showVictoryBanner('red', '🔴 红方胜利', '阴谋与背叛的胜利', gameInfo.win_reason);
-                    }
-                }, 800);
-            }
-        }
-
-        // 添加全局关闭胜利横幅函数
-        window.closeVictoryBanner = function() {
-            const banner = document.querySelector('.victory-banner');
-            if (banner) {
-                banner.style.animation = 'victorySlideOut 0.8s ease forwards';
-                setTimeout(() => {
-                    banner.remove();
-                }, 800);
-            }
-        };
-
-        // 显示胜利横幅
-        function showVictoryBanner(faction, title, subtitle, reason) {
-            // 移除已存在的横幅
-            const existingBanner = document.querySelector('.victory-banner');
-            if (existingBanner) {
-                existingBanner.remove();
-            }
-            
-            const victoryBanner = document.createElement('div');
-            victoryBanner.className = 'victory-banner ' + faction;
-            
-            // 生成粒子效果
-            let particlesHtml = '';
-            for (let i = 0; i < 15; i++) {
-                const left = Math.random() * 100;
-                const delay = Math.random() * 2;
-                particlesHtml += '<div class="victory-particle" style="left: ' + left + '%; animation-delay: ' + delay + 's;"></div>';
-            }
-            
-            // 构建横幅内容
-            let html = '<div class="victory-particles">' + particlesHtml + '</div>';
-            html += '<div class="victory-icon left">⚔️</div>';
-            html += '<div class="victory-icon right">🏆</div>';
-            html += '<div class="victory-content">';
-            html += '<h1 class="victory-title">' + title + '</h1>';
-            html += '<p class="victory-subtitle">' + subtitle + '</p>';
-            html += '<p class="victory-reason">' + (reason || '游戏结束') + '</p>';
-            html += '</div>';
-            
-            // 创建关闭按钮 - 修复事件监听器
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'victory-close-btn';
-            closeBtn.innerHTML = '✕';
-            closeBtn.title = '关闭';
-            closeBtn.style.opacity = '0';
-            closeBtn.style.animation = 'victoryCloseAppear 0.5s ease 2.5s forwards';
-            
-            // 添加点击事件监听器
-            closeBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                closeVictoryBanner();
-            });
-            
-            victoryBanner.innerHTML = html;
-            victoryBanner.appendChild(closeBtn);
-            
-            // 添加点击横幅外部也能关闭的功能
-            victoryBanner.addEventListener('click', function(e) {
-                if (e.target === victoryBanner) {
-                    closeVictoryBanner();
-                }
-            });
-            
-            document.body.appendChild(victoryBanner);
-            
-            // 播放胜利音效
-            playVictorySound(faction);
-            
-            // 8秒后自动关闭
-            setTimeout(function() {
-                if (document.querySelector('.victory-banner')) {
-                    closeVictoryBanner();
-                }
-            }, 8000);
-        }
-
-        // 定义全局关闭函数
-        function closeVictoryBanner() {
-            const banner = document.querySelector('.victory-banner');
-            if (banner) {
-                banner.style.animation = 'victorySlideOut 0.8s ease forwards';
-                setTimeout(() => {
-                    banner.remove();
-                }, 800);
-            }
-        }
-
-        // 将函数挂载到window对象以便全局访问
-        window.closeVictoryBanner = closeVictoryBanner;
-
-        // 播放胜利音效
-        function playVictorySound(faction) {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                if (faction === 'blue') {
-                    // 蓝方：明亮上升的音调
-                    playTone(audioContext, 523.25, 0.3, 0);    // C5
-                    playTone(audioContext, 659.25, 0.3, 0.2);  // E5
-                    playTone(audioContext, 783.99, 0.4, 0.4);  // G5
-                } else {
-                    // 红方：低沉有力的音调
-                    playTone(audioContext, 293.66, 0.4, 0);    // D4
-                    playTone(audioContext, 369.99, 0.4, 0.2);  // F#4
-                    playTone(audioContext, 440.00, 0.5, 0.4);  // A4
-                }
-            } catch (error) {
-                console.log('胜利音效播放失败:', error);
-            }
-        }
-
-        function playTone(audioContext, frequency, duration, delay) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + delay);
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime + delay);
-            gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + delay + 0.1);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + delay + duration);
-            
-            oscillator.start(audioContext.currentTime + delay);
-            oscillator.stop(audioContext.currentTime + delay + duration);
-        }
-
-        // 添加缺失的自动播放相关函数
-        function startAutoReplay() {
-            if (isAutoReplay) return;
-            
-            isAutoReplay = true;
-            autoplayBtnFlow.innerHTML = '<i class="bi bi-pause-fill"></i> 暂停播放';
-            autoplayBtnFlow.classList.remove('btn-outline-primary');
-            autoplayBtnFlow.classList.add('btn-primary');
-            
-            console.log('开始自动播放，当前索引:', currentReplayMsgIndex);
-            
-            const messages = getAllReplayMessages();
-            if (currentReplayMsgIndex >= messages.length) {
-                currentReplayMsgIndex = 0; // 重新开始
-            }
-            
-            // 开始播放循环
-            playNextMessage(messages);
-        }
-
-        function stopAutoReplay() {
-            if (!isAutoReplay) return;
-            
-            isAutoReplay = false;
-            if (autoReplayTimeout) {
-                clearTimeout(autoReplayTimeout);
-                autoReplayTimeout = null;
-            }
-            
-            autoplayBtnFlow.innerHTML = '<i class="bi bi-play-fill"></i> 自动播放';
-            autoplayBtnFlow.classList.remove('btn-primary');
-            autoplayBtnFlow.classList.add('btn-outline-primary');
-            
-            console.log('停止自动播放，当前索引:', currentReplayMsgIndex);
-        }
-
-        function playNextMessage(messages) {
-            if (!isAutoReplay || currentReplayMsgIndex >= messages.length) {
-                if (currentReplayMsgIndex >= messages.length) {
-                    console.log('自动播放完成');
-                }
-                stopAutoReplay();
-                return;
-            }
-            
-            const success = executeReplayStep(messages);
-            if (!success) {
-                stopAutoReplay();
-                return;
-            }
-            
-            const currentMsg = messages[currentReplayMsgIndex];
-            const delay = getMessageDelay(currentMsg);
-            
-            currentReplayMsgIndex++;
-            updateManualButtons(messages.length);
-            
-            // 设置下一条消息的播放定时器
-            autoReplayTimeout = setTimeout(() => {
-                playNextMessage(messages);
-            }, delay);
-        }
-
-        // 添加更新手动按钮状态的函数
-        function updateManualButtons(totalMessages) {
-            if (manualNextBtn) {
-                if (currentReplayMsgIndex >= totalMessages) {
-                    manualNextBtn.disabled = true;
-                    manualNextBtn.innerHTML = '<i class="bi bi-check-circle"></i> 已完成';
-                } else {
-                    manualNextBtn.disabled = false;
-                    manualNextBtn.innerHTML = '<i class="bi bi-skip-end-fill"></i> 下一步';
-                }
-            }
-        }
-
-        // 添加缺失的动画关键帧CSS
-        const animationCSS = `
-        @keyframes assassinationFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes assassinationFadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
-        @keyframes assassinationTitleAppear {
-            0% {
-                opacity: 0;
-                transform: scale(0.3) translateY(50px);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-        
-        @keyframes assassinationSubtitleAppear {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes assassinationDetailsAppear {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes bloodPulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.7; }
-        }
-        
-        @keyframes daggerStrike {
-            0% {
-                transform: rotate(45deg) scale(0);
-                opacity: 0;
-            }
-            50% {
-                transform: rotate(45deg) scale(1.2);
-                opacity: 0.8;
-            }
-            100% {
-                transform: rotate(45deg) scale(1);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes crownAppear {
-            0% {
-                transform: scale(0) rotate(-180deg);
-                opacity: 0;
-            }
-            100% {
-                transform: scale(1) rotate(0deg);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes closeButtonAppear {
-            from {
-                opacity: 0;
-                transform: translateY(-10px) scale(0.5);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        `;
-        
-        // 将动画CSS添加到页面
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = animationCSS;
-        document.head.appendChild(styleSheet);
-
-        // 移动端视图切换
-        const viewButtons = document.querySelectorAll('[data-view]');
-        const views = document.querySelectorAll('.mobile-view');
-
-        function switchView(viewName) {
-            views.forEach(view => {
-                if (view.id === viewName + 'View') {
-                    view.style.display = 'block';
-                } else {
-                    view.style.display = 'none';
-                }
-            });
-
-            viewButtons.forEach(btn => {
-                if (btn.dataset.view === viewName) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        viewButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                switchView(btn.dataset.view);
-            });
-        });
-
-        // 初始化
-        if (window.innerWidth <= 768) {
-            switchView('main');
-        }
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768) {
-                views.forEach(view => {
-                    view.style.display = '';
-                });
-            }
-        });
-
-        // 开场动画
-        setTimeout(() => {
-            const introAnimation = document.getElementById('introAnimation');
-            if (introAnimation) {
-                introAnimation.classList.add('fade-out');
-                setTimeout(() => {
-                    introAnimation.style.display = 'none';
-                }, 500);
-            }
-        }, 3000);
-
-        // --- Data from Flask ---
-        const gameEvents = {{ game_events|tojson }};
-        const gameInfo = {{ game_info|tojson }};
-        const roles = gameInfo.roles || {};
-        const gameId = "{{ game_id }}";
-
-        // Determine max round from events or score
-        const maxRoundFromEvents = gameEvents.length > 0
-            ? (gameEvents[gameEvents.length - 1].round === 'assassination'
-                ? (gameEvents.length > 1 ? gameEvents[gameEvents.length - 2].round : 0)
-                : gameEvents[gameEvents.length - 1].round)
-            : 0;
-        const maxRound = Math.max(maxRoundFromEvents, gameInfo.rounds_played || 0);
-
-        // --- Role Info ---
-        const roleNames = {
-            "Merlin": "梅林", "Percival": "派西维尔", "Knight1": "骑士", "Knight2": "骑士",
-            "Assassin": "刺客", "Morgana": "莫甘娜", "Oberon": "奥伯伦"
-        };
-        const roleFactions = {
-            "Merlin": "blue", "Percival": "blue", "Knight1": "blue", "Knight2": "blue",
-            "Assassin": "red", "Morgana": "red", "Oberon": "red"
-        };
-
-        // 用于跟踪骑士分配
-        let knightCount = 0;
-        const knightAssignments = new Map();
-
-        // --- DOM Elements ---
+        // DOM Elements
         const chatContainer = document.getElementById('chatContainer');
-        const gameMapContainer = document.getElementById('gameMap');
         const currentRoundBadge = document.getElementById('currentRoundBadge');
         const autoplayBtnFlow = document.getElementById('autoplayBtnFlow');
         const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-        const mapPrevRoundBtn = document.getElementById('mapPrevRoundBtn');
-        const mapNextRoundBtn = document.getElementById('mapNextRoundBtn');
-        const mapCurrentRoundDisplay = document.getElementById('mapCurrentRoundDisplay');
-
-        let currentMapRound = 0;
-
-        // --- Helper Functions ---
-        function getPlayerInfo(playerId) {
-            const idStr = String(playerId);
-            let role = roles[idStr] || '未知角色';
-            if (role === 'Knight') {
-                if (!knightAssignments.has(idStr)) {
-                    knightCount++;
-                    knightAssignments.set(idStr, knightCount);
-                }
-                role = knightAssignments.get(idStr) === 1 ? 'Knight1' : 'Knight2';
-            }
-            const name = roleNames[role] || role;
-            const faction = roleFactions[role] || 'unknown';
-            return { id: idStr, role: role, name: name, faction: faction };
-        }
-
-        function scrollToBottom() {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function initializeKnightAssignments() {
-            knightCount = 0;
-            knightAssignments.clear();
-            const knightIds = Object.entries(roles)
-                .filter(([_, role]) => role === 'Knight')
-                .map(([id, _]) => parseInt(id))
-                .sort((a, b) => a - b);
-
-            knightIds.forEach((id, index) => {
-                knightAssignments.set(id.toString(), index + 1);
-            });
-        }
-
-        initializeKnightAssignments();
-
-        // --- 批次移动数据结构 ---
-        let moveSteps = [];
-        let moveIndexToRound = [];
-        let moveIndexToMsgId = [];
-        let msgIdToMoveIndex = {};
-
-        // --- 预处理所有移动事件，生成moveSteps ---
-        function preprocessMoveSteps() {
-            moveSteps = [];
-            moveIndexToRound = [];
-            moveIndexToMsgId = [];
-            msgIdToMoveIndex = {};
-            let moveIndex = 0;
-            let msgId = 0;
-            gameEvents.forEach((event) => {
-                if (event.round === 'assassination') return;
-                if (event.events && event.events.length > 0) {
-                    event.events.forEach(eventItem => {
-                        if (eventItem.type === "move") {
-                            moveSteps.push({
-                                moveIndex,
-                                round: event.round,
-                                playerId: eventItem.data.player_id,
-                                move: eventItem.data.valid_moves[eventItem.data.valid_moves.length - 1],
-                                newPos: eventItem.data.new_pos,
-                                msgId
-                            });
-                            moveIndexToRound.push(event.round);
-                            moveIndexToMsgId.push(msgId);
-                            msgIdToMoveIndex[msgId] = moveIndex;
-                            moveIndex++;
-                        }
-                        msgId++;
-                    });
-                } else {
-                    if (event.events) msgId += event.events.length;
-                }
-            });
-        }
-        preprocessMoveSteps();
-
-        
-        // --- 聊天历史生成 ---
-        function generateChatHistory() {
-            let chatHtml = '';
-            let msgId = 0;
-            let moveCount = 0;
-
-            chatHtml += `
-                <div class="round-divider" id="round-0">
-                    <span class="badge bg-secondary">游戏开始</span>
-                </div>
-                <div class="message-system">
-                    开始于: ${gameInfo.start_time_formatted || '未知时间'}
-                </div>
-            `;
-
-            gameEvents.forEach((event) => {
-                if (event.round === 'assassination') {
-                    chatHtml += `
-                        <div class="round-divider" id="round-assassination">
-                            <span class="badge bg-dark">刺杀阶段</span>
-                        </div>`;
-                    if (event.assassination) {
-                        const assassinInfo = getPlayerInfo(event.assassination.assassin);
-                        const targetInfo = getPlayerInfo(event.assassination.target);
-                        const isSuccess = event.assassination.success;
-                        
-                        chatHtml += `
-                            <div class="message-system">
-                                刺客 ${assassinInfo.id}号 (${assassinInfo.name}) 选择刺杀 ${targetInfo.id}号 (${targetInfo.name} - ${event.assassination.target_role}).<br>
-                                结果: <span class="badge ${isSuccess ? 'bg-danger' : 'bg-success'}">${isSuccess ? '成功' : '失败'}</span>
-                            </div>`;
-                        
-                        // 注释掉初始化时的刺杀动画
-                        // if (isSuccess) {
-                        //     setTimeout(() => {
-                        //         showAssassinationSuccessAnimation(assassinInfo, targetInfo, event.assassination.target_role);
-                        //     }, 1000); // 延迟1秒显示动画，让用户先看到刺杀结果
-                        // }
-                    }
-                    return;
-                }
-
-                const roundNum = event.round;
-                const missionSuccess = event.mission_result ? event.mission_result.success : null;
-                const roundBadgeClass = missionSuccess === true ? 'bg-info text-dark' : (missionSuccess === false ? 'bg-danger' : 'bg-secondary');
-                const roundResultText = missionSuccess === true ? '成功' : (missionSuccess === false ? '失败' : '进行中');
-
-                chatHtml += `
-                    <div class="round-divider" id="round-${roundNum}">
-                        <span class="badge ${roundBadgeClass}">
-                            第 ${roundNum} 轮任务 ${missionSuccess !== null ? `(${roundResultText})` : ''}
-                        </span>
-                    </div>
-                `;
-
-                if (event.leader) {
-                    const leaderInfo = getPlayerInfo(event.leader);
-                    chatHtml += `
-                        <div class="message-system">
-                            <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})<br>
-                            <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
-                            ${event.team_members && event.team_members.length > 0
-                                ? event.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
-                                : '无'}
-                        </div>
-                    `;
-                } else {
-                    chatHtml += `<div class="message-system">等待队长 ${event.leader || '?'}号 选择队伍...</div>`;
-                }
-
-                if (event.events && event.events.length > 0) {
-                    event.events.forEach(eventItem => {
-                        if (eventItem.type === "team_propose") {
-                            const leader = eventItem.data.leader;
-                            const team_members = eventItem.data.team_members;
-                            if (leader) {
-                                const leaderInfo = getPlayerInfo(leader);
-                                chatHtml += `
-                                    <div class="message-system">
-                                        <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})<br>
-                                        <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
-                                        ${team_members && team_members.length > 0
-                                            ? team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
-                                            : '无'}
-                                    </div>
-                                `;
-                            }
-                        } else if (eventItem.type === "move") {
-                            const playerId = eventItem.data.player_id;
-                            const validMoves = eventItem.data.valid_moves;
-                            const lastMove = validMoves[validMoves.length - 1];
-                            let lastMoveDisplay = "";
-
-                            if (lastMove === "left") {
-                                lastMoveDisplay = "⬅️ 向左";
-                            } else if (lastMove === "up") {
-                                lastMoveDisplay = "⬆️ 向上";
-                            } else if (lastMove === "down") {
-                                lastMoveDisplay = "⬇️ 向下";
-                            } else if (lastMove === "right") {
-                                lastMoveDisplay = "➡️ 向右";
-                            }
-
-                            const newPos = eventItem.data.new_pos;
-                            if (playerId) {
-                                moveCount++;
-                                let moveIndex = msgIdToMoveIndex[msgId];
-                                chatHtml += `
-                                    <div class="message-system move-message" data-move-index="${moveIndex}" style="cursor: pointer;" onclick="showMoveOnMap(${moveIndex})">
-                                        <i class="bi bi-person-badge"></i> <strong>${playerId}号 玩家</strong> 进行了移动
-                                        <span class="badge bg-secondary ms-2">第${moveCount}步</span><br>
-                                        <strong>有效移动:</strong> ${lastMoveDisplay}<br>
-                                        <strong>新位置:</strong> ${newPos}
-                                        <small class="text-muted d-block mt-1">💡 点击查看地图状态</small>
-                                    </div>
-                                `;
-                            }
-                        } else if (eventItem.type === "speech") {
-                            const [playerId, message, speechType, hearers] = eventItem.data;
-                            const playerInfo = getPlayerInfo(playerId);
-                            const wrapperClass = playerInfo.faction === 'blue' ? 'message-wrapper-blue' : 'message-wrapper-red';
-                            const tagColorClass = playerInfo.faction === 'blue' ? 'text-primary' : 'text-danger';
-                            const bubbleClass = `message-${playerInfo.faction} ${speechType === "private" ? "private-speech" : ""}`;
-
-                            const speechBadge = speechType === "private"
-                                ? '<span class="badge bg-secondary speech-badge">有限范围</span>'
-                                : '<span class="badge bg-info text-dark speech-badge">公开</span>';
-
-                            const hearersTags = speechType === "private" && hearers
-                                ? `<span class="badge bg-secondary speech-badge">${hearers}</span>`
-                                : '';
-
-                            const speechId = `speech-${msgId}`;
-                            const ttsButtonId = `tts-btn-${msgId}`;
-
-                            // 获取角色对应的CSS类名
-                            function getRoleClass(role) {
-                                const roleClassMap = {
-                                    'Merlin': 'role-merlin',
-                                    'Percival': 'role-percival',
-                                    'Knight1': 'role-knight1',
-                                    'Knight2': 'role-knight2',
-                                    'Assassin': 'role-assassin',
-                                    'Morgana': 'role-morgana',
-                                    'Oberon': 'role-oberon'
-                                };
-                                return roleClassMap[role] || '';
-                            }
-
-                            const roleClass = getRoleClass(playerInfo.role);
-                            const avatarClasses = `player-avatar ${playerInfo.faction} ${roleClass}`;
-
-                            chatHtml += `
-                                <div class="message-wrapper ${wrapperClass}">
-                                    <div class="${avatarClasses}" title="${playerInfo.id}号 - ${playerInfo.name}">
-                                        ${roleClass ? '' : playerInfo.id}
-                                    </div>
-                                    <div class="message-content">
-                                        <div class="player-tag ${tagColorClass}">
-                                            ${playerInfo.id}号 (${playerInfo.name}) ${speechBadge} ${hearersTags ? `<div class="hearers-tags">${hearersTags}</div>` : ""}                     
-                                        </div>
-                                        <div class="message-bubble ${bubbleClass}" id="${speechId}" 
-                                             data-player-id="${playerId}" 
-                                             data-text="${message.replace(/"/g, '&quot;')}"
-                                             data-battle-id="${gameId}">
-                                            ${message}
-                                            <button class="tts-play-btn" id="${ttsButtonId}" onclick="playTTS('${speechId}')" title="播放语音">
-                                                <i class="bi bi-volume-up"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="clearfix"></div>
-                            `;
-                        } else if (eventItem.type === "vote_attempt") {
-                            const voteAttempt = eventItem.data;
-                            const approved = voteAttempt.approved;
-                            chatHtml += `
-                                <div class="vote-info">
-                                    <strong>队伍投票结果:</strong>
-
-                                    <span class="badge fs-6 ${approved ? 'bg-success' : 'bg-warning text-dark'}">
-                                        ${approved ? '通过' : '拒绝'}
-                                    </span>
-                                    <small class="text-muted">(${voteAttempt.approve_count || 0} 赞成 / ${voteAttempt.reject_count || 0} 反对)</small>
-                                    <div class="mt-2">`;
-
-                            if (voteAttempt.votes && Object.keys(voteAttempt.votes).length > 0) {
-                                const sortedPlayerIds = Object.keys(voteAttempt.votes).sort((a, b) => parseInt(a) - parseInt(b));
-                                sortedPlayerIds.forEach(playerId => {
-                                    const vote = voteAttempt.votes[playerId];
-                                    const playerInfo = getPlayerInfo(playerId);
-                                    chatHtml += `
-                                        <span class="vote-badge badge ${vote ? 'bg-success-light' : 'bg-danger-light'} border ${vote ? 'border-success' : 'border-danger'} text-dark">
-                                            ${playerInfo.id}号: ${vote ? '<i class="bi bi-check-circle"></i> 赞成' : '<i class="bi bi-x-circle"></i> 反对'}
-                                        </span>
-
-                                    `;
-                                });
-                            } else {
-                                chatHtml += `<small class="text-muted d-block">（未记录具体投票）</small>`;
-                            }
-                            chatHtml += `</div></div>`;
-                        }
-                        msgId++;
-                    });
-                }
-
-                if (event.mission_execution) {
-                    const execution = event.mission_execution;
-                    const success = execution.success;
-                    chatHtml += `
-                        <div class="mission-result-info">
-                            <div class="alert ${success ? 'alert-info' : 'alert-danger'} d-inline-block py-1 px-3">
-                                <strong>任务 ${roundNum} 执行结果:</strong>
-                                ${success ? '成功' : '失败'}
-                                ${execution.fail_votes !== undefined ? ` (${execution.fail_votes} 票失败)` : ''}
-                            </div>
-                        </div>
-                    `;
-                }
-                chatHtml += `<div class="clearfix"></div>`;
-            });
-
-            chatHtml += `
-                <div class="round-divider">
-                    <span class="badge bg-dark">游戏结束</span>
-                </div>
-                <div class="message-system">
-                    <div class="alert ${gameInfo.winner === 'blue' ? 'alert-info' : (gameInfo.winner === 'red' ? 'alert-danger' : 'alert-secondary')} d-inline-block fw-bold">
-                        ${gameInfo.winner === 'blue' ? '蓝方胜利!' : (gameInfo.winner === 'red' ? '红方胜利!' : '游戏结束')}
-                    </div><br>
-                    <small>原因: ${gameInfo.win_reason || '未知'}</small><br>
-                    <small>结束于: ${gameInfo.end_time_formatted || '未知时间'}</small>
-                </div>
-            `;
-
-            chatContainer.innerHTML = chatHtml;
-            scrollToBottom();
-        }
-
-        // --- Update Display for Round ---
-        function updateDisplayForRound(round, shouldScroll = true) {
-            let lastMoveIdx = -1;
-            for (let i = 0; i <= moveSteps.length - 1; i++) {
-                if (moveSteps[i].round == round) {
-                    lastMoveIdx = i;
-                    break;
-                }
-            }
-
-            renderMapByMoveIndex(lastMoveIdx);
-
-            if (shouldScroll) {
-                const roundElement = document.getElementById(`round-${round}`);
-                if (roundElement) {
-                    const offsetTop = roundElement.offsetTop - chatContainer.offsetTop - 10;
-                    chatContainer.scrollTo({ top: offsetTop, behavior: 'smooth' });
-                } else if (round === 0) {
-                    chatContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                } else if (round === 'assassination') {
-                    const assassElement = document.getElementById(`round-assassination`);
-                    if (assassElement) {
-                        const offsetTop = assassElement.offsetTop - chatContainer.offsetTop - 10;
-                        chatContainer.scrollTo({ top: offsetTop, behavior: 'smooth' });
-                    }
-                }
-            }
-        }
-
-        // --- Event Listeners ---
-        mapPrevRoundBtn.addEventListener('click', () => {
-            if (currentMapRound > 0) {
-                updateDisplayForRound(currentMapRound - 1, true);
-            }
-        });
-
-        mapNextRoundBtn.addEventListener('click', () => {
-            if (currentMapRound < maxRound) {
-                updateDisplayForRound(currentMapRound + 1, true);
-            }
-        });
-
-        scrollToBottomBtn.addEventListener('click', scrollToBottom);
-
-        // 在事件监听器部分添加
         const manualNextBtn = document.getElementById('manualNextBtn');
 
-        if (manualNextBtn) {
-            manualNextBtn.addEventListener('click', manualNextStep);
+        // --- Data from Flask ---
+        const gameEvents = {{ game_events| tojson
+    }};
+    const gameInfo = {{ game_info| tojson }};
+    const roles = gameInfo.roles || {};
+    const gameId = "{{ game_id }}";
+
+    const roleNames = {
+        "Merlin": "梅林", "Percival": "派西维尔", "Knight1": "骑士", "Knight2": "骑士",
+        "Assassin": "刺客", "Morgana": "莫甘娜", "Oberon": "奥伯伦"
+    };
+    const roleFactions = {
+        "Merlin": "blue", "Percival": "blue", "Knight1": "blue", "Knight2": "blue",
+        "Assassin": "red", "Morgana": "red", "Oberon": "red"
+    };
+
+    let knightCount = 0;
+    const knightAssignments = new Map();
+
+    function getAllReplayMessages() {
+        return Array.from(chatContainer.querySelectorAll('.message-bubble, .message-system'));
+    }
+
+    function getMessageDelay(msgElem) {
+        let text = '';
+        let baseDelay = 1000;
+
+        if (msgElem.classList.contains('message-bubble')) {
+            text = msgElem.innerText || msgElem.textContent || '';
+            baseDelay = 1500;
+        } else if (msgElem.classList.contains('message-system')) {
+            text = msgElem.innerText || msgElem.textContent || '';
+            baseDelay = 800;
         }
 
-        if (autoplayBtnFlow) {
-            autoplayBtnFlow.addEventListener('click', () => {
-                if (isAutoReplay) {
-                    stopAutoReplay();
-                } else {
-                    startAutoReplay();
-                }
-            });
-        }
+        const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+        const otherChars = text.length - chineseChars;
 
-        // 初始化内容
-        if (!gameInfo || !gameEvents) {
-            chatContainer.innerHTML = `<div class="alert alert-danger m-3">错误：加载对局数据失败，部分信息缺失。请检查日志文件。</div>`;
-            console.error("Game data missing:", { gameInfo, gameEvents });
+        const chineseReadTime = chineseChars * 120;
+        const otherReadTime = otherChars * 40;
+
+        let totalDelay = baseDelay + chineseReadTime + otherReadTime;
+
+        if (msgElem.classList.contains('message-bubble')) {
+            totalDelay = Math.max(1500, Math.min(6000, totalDelay));
+        } else if (msgElem.classList.contains('message-system')) {
+            totalDelay = Math.max(800, Math.min(4000, totalDelay));
         } else {
-            generateChatHistory();
-            updateDisplayForRound(0);
-            
-            // 初始化手动按钮状态
-            const messages = getAllReplayMessages();
-            updateManualButtons(messages.length);
+            totalDelay = Math.max(500, Math.min(5000, totalDelay));
         }
 
-        // TTS功能（简化版）
-        let currentAudio = null;
-        let currentPlayingButton = null;
+        return totalDelay;
+    }
 
-        window.playTTS = async function (speechId) {
-            const speechElement = document.getElementById(speechId);
-            if (!speechElement) return;
-
-            const button = speechElement.querySelector('.tts-play-btn');
-            if (!button) return;
-
-            if (currentAudio && !currentAudio.paused) {
-                currentAudio.pause();
-                if (currentPlayingButton) {
-                    setButtonState(currentPlayingButton, 'normal');
-                }
-            }
-
-            const playerId = speechElement.dataset.playerId;
-            const text = speechElement.dataset.text;
-            const battleId = speechElement.dataset.battleId;
-
-            if (!playerId || !text || !battleId) return;
-
-            setButtonState(button, 'loading');
-
-            try {
-                const response = await fetch('/visualizer/api/tts/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        text: text,
-                        player_id: playerId,
-                        battle_id: battleId,
-                        roles: gameInfo.roles || {}
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success && data.audio_url) {
-                    await playAudioFromUrl(data.audio_url, button);
-                } else {
-                    throw new Error(data.error || '生成语音失败');
-                }
-
-            } catch (error) {
-                console.error('TTS播放失败:', error);
-                setButtonState(button, 'error');
-                setTimeout(() => setButtonState(button, 'normal'), 3000);
-            }
-        };
-
-        async function playAudioFromUrl(audioUrl, button) {
-            return new Promise((resolve, reject) => {
-                const audio = new Audio(audioUrl);
-
-                audio.addEventListener('canplay', () => {
-                    setButtonState(button, 'playing');
-                    currentAudio = audio;
-                    currentPlayingButton = button;
-                });
-
-                audio.addEventListener('ended', () => {
-                    setButtonState(button, 'normal');
-                    currentAudio = null;
-                    currentPlayingButton = null;
-                    resolve();
-                });
-
-                audio.addEventListener('error', (e) => {
-                    setButtonState(button, 'error');
-                    setTimeout(() => setButtonState(button, 'normal'), 3000);
-                    reject(new Error('音频播放失败'));
-                });
-
-                audio.play().catch(reject);
-            });
+    function manualNextStep() {
+        const messages = getAllReplayMessages();
+        if (currentReplayMsgIndex >= messages.length) {
+            currentReplayMsgIndex = messages.length - 1;
+            return;
         }
 
-        function setButtonState(button, state) {
-            if (!button) return;
-
-            button.classList.remove('loading', 'playing', 'error');
-            button.disabled = false;
-
-            const icon = button.querySelector('i');
-            if (!icon) return;
-
-            switch (state) {
-                case 'loading':
-                    button.classList.add('loading');
-                    button.disabled = true;
-                    icon.className = 'bi bi-hourglass-split';
-                    break;
-                case 'playing':
-                    button.classList.add('playing');
-                    icon.className = 'bi bi-pause-fill';
-                    break;
-                case 'error':
-                    button.classList.add('error');
-                    button.disabled = true;
-                    icon.className = 'bi bi-exclamation-triangle';
-                    break;
-                default:
-                case 'normal':
-                    icon.className = 'bi bi-volume-up';
-                    break;
-            }
+        if (isAutoReplay) {
+            stopAutoReplay();
         }
 
-        // 添加移动消息点击处理函数
-        window.showMoveOnMap = function (moveIndex) {
-            renderMapByMoveIndex(moveIndex);
+        executeReplayStep(messages);
+        currentReplayMsgIndex++;
 
-            // 高亮对应的移动消息
-            document.querySelectorAll('.move-message').forEach(msg => {
-                msg.classList.remove('highlighted-move');
-            });
+        updateManualButtons(messages.length);
+    }
 
-            const clickedMsg = document.querySelector(`[data-move-index="${moveIndex}"]`);
-            if (clickedMsg) {
-                clickedMsg.classList.add('highlighted-move');
-                setTimeout(() => {
-                    clickedMsg.classList.remove('highlighted-move');
-                }, 2000);
+    function executeReplayStep(messages) {
+        if (currentReplayMsgIndex >= messages.length) {
+            return false;
+        }
+
+        const msg = messages[currentReplayMsgIndex];
+
+        msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        messages.forEach(m => m.classList.remove('auto-replay-active'));
+        msg.classList.add('auto-replay-active');
+
+        checkForVictory(msg);
+
+        return true;
+    }
+
+    function checkForVictory(msgElement) {
+        const text = msgElement.textContent || msgElement.innerText || '';
+
+        if (text.includes('胜利')) {
+            setTimeout(function () {
+                if (text.includes('蓝方胜利')) {
+                    showVictoryBanner('blue', '🔵 蓝方胜利', '正义与智慧的胜利', gameInfo.win_reason);
+                } else if (text.includes('红方胜利')) {
+                    showVictoryBanner('red', '🔴 红方胜利', '阴谋与背叛的胜利', gameInfo.win_reason);
+                }
+            }, 800);
+        }
+    }
+
+    function showVictoryBanner(faction, title, subtitle, reason) {
+        const existingBanner = document.querySelector('.victory-banner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+
+        const victoryBanner = document.createElement('div');
+        victoryBanner.className = 'victory-banner ' + faction;
+
+        let particlesHtml = '';
+        for (let i = 0; i < 15; i++) {
+            const left = Math.random() * 100;
+            const delay = Math.random() * 2;
+            particlesHtml += '<div class="victory-particle" style="left: ' + left + '%; animation-delay: ' + delay + 's;"></div>';
+        }
+
+        let html = '<div class="victory-particles">' + particlesHtml + '</div>';
+        html += '<div class="victory-icon left">⚔️</div>';
+        html += '<div class="victory-icon right">🏆</div>';
+        html += '<div class="victory-content">';
+        html += '<h1 class="victory-title">' + title + '</h1>';
+        html += '<p class="victory-subtitle">' + subtitle + '</p>';
+        html += '<p class="victory-reason">' + (reason || '游戏结束') + '</p>';
+        html += '</div>';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'victory-close-btn';
+        closeBtn.innerHTML = '✕';
+        closeBtn.title = '关闭';
+        closeBtn.style.opacity = '0';
+        closeBtn.style.animation = 'victoryCloseAppear 0.5s ease 2.5s forwards';
+
+        closeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeVictoryBanner();
+        });
+
+        victoryBanner.innerHTML = html;
+        victoryBanner.appendChild(closeBtn);
+
+        victoryBanner.addEventListener('click', function (e) {
+            if (e.target === victoryBanner) {
+                closeVictoryBanner();
             }
-        };
+        });
 
-        // 添加刺杀成功动画函数
-        function showAssassinationSuccessAnimation(assassinInfo, targetInfo, targetRole) {
-            // 创建动画覆盖层
-            const animationOverlay = document.createElement('div');
-            animationOverlay.className = 'assassination-success-overlay';
-            animationOverlay.innerHTML = `
-                <div class="blood-effect"></div>
-                <div class="dagger-icon">⚔️</div>
-                <div class="victory-crown">👑</div>
-                
-                <h1 class="assassination-title">刺杀成功</h1>
-                <h2 class="assassination-subtitle">红方胜利</h2>
-                <div class="assassination-details">
-                    <p><strong>刺客:</strong> ${assassinInfo.id}号 (${assassinInfo.name})</p>
-                    <p><strong>目标:</strong> ${targetInfo.id}号 (${targetInfo.name})</p>
-                    <p><strong>用户名:</strong> ${getPlayerUsername(targetInfo.id)}</p>
-                    <br>
-                    <p style="font-style: italic; color: #ff6b6b;">
-                        "在黑暗中，真相被利刃揭露，<br>
-                        梅林的智慧也无法逃脱命运的审判..."
-                    </p>
-                </div>
-                
-                <button class="close-animation-btn" onclick="closeAssassinationAnimation()">
-                    <i class="bi bi-x-circle me-2"></i>关闭动画
-                </button>
-            `;
-            
-            document.body.appendChild(animationOverlay);
-            
-            // 添加音效
-            playAssassinationSound();
-            
-            // 10秒后自动关闭
+        document.body.appendChild(victoryBanner);
+
+        setTimeout(function () {
+            if (document.querySelector('.victory-banner')) {
+                closeVictoryBanner();
+            }
+        }, 8000);
+    }
+
+    function closeVictoryBanner() {
+        const banner = document.querySelector('.victory-banner');
+        if (banner) {
+            banner.style.animation = 'victorySlideOut 0.8s ease forwards';
             setTimeout(() => {
-                if (document.querySelector('.assassination-success-overlay')) {
-                    closeAssassinationAnimation();
+                banner.remove();
+            }, 800);
+        }
+    }
+
+    window.closeVictoryBanner = closeVictoryBanner;
+
+    function startAutoReplay() {
+        if (isAutoReplay) return;
+
+        isAutoReplay = true;
+        autoplayBtnFlow.innerHTML = '<i class="bi bi-pause-fill"></i> 暂停播放';
+        autoplayBtnFlow.classList.remove('btn-outline-primary');
+        autoplayBtnFlow.classList.add('btn-primary');
+
+        const messages = getAllReplayMessages();
+        if (currentReplayMsgIndex >= messages.length) {
+            currentReplayMsgIndex = 0;
+        }
+
+        playNextMessage(messages);
+    }
+
+    function stopAutoReplay() {
+        if (!isAutoReplay) return;
+
+        isAutoReplay = false;
+        if (autoReplayTimeout) {
+            clearTimeout(autoReplayTimeout);
+            autoReplayTimeout = null;
+        }
+
+        autoplayBtnFlow.innerHTML = '<i class="bi bi-play-fill"></i> 自动播放';
+        autoplayBtnFlow.classList.remove('btn-primary');
+        autoplayBtnFlow.classList.add('btn-outline-primary');
+    }
+
+    function playNextMessage(messages) {
+        if (!isAutoReplay || currentReplayMsgIndex >= messages.length) {
+            stopAutoReplay();
+            return;
+        }
+
+        const success = executeReplayStep(messages);
+        if (!success) {
+            stopAutoReplay();
+            return;
+        }
+
+        const currentMsg = messages[currentReplayMsgIndex];
+        const delay = getMessageDelay(currentMsg);
+
+        currentReplayMsgIndex++;
+        updateManualButtons(messages.length);
+
+        autoReplayTimeout = setTimeout(() => {
+            playNextMessage(messages);
+        }, delay);
+    }
+
+    function updateManualButtons(totalMessages) {
+        if (manualNextBtn) {
+            if (currentReplayMsgIndex >= totalMessages) {
+                manualNextBtn.disabled = true;
+                manualNextBtn.innerHTML = '<i class="bi bi-check-circle"></i> 已完成';
+            } else {
+                manualNextBtn.disabled = false;
+                manualNextBtn.innerHTML = '<i class="bi bi-skip-end-fill"></i> 下一步';
+            }
+        }
+    }
+
+    function getPlayerInfo(playerId) {
+        const idStr = String(playerId);
+        let role = roles[idStr] || '未知角色';
+        if (role === 'Knight') {
+            if (!knightAssignments.has(idStr)) {
+                knightCount++;
+                knightAssignments.set(idStr, knightCount);
+            }
+            role = knightAssignments.get(idStr) === 1 ? 'Knight1' : 'Knight2';
+        }
+        const name = roleNames[role] || role;
+        const faction = roleFactions[role] || 'unknown';
+        return { id: idStr, role: role, name: name, faction: faction };
+    }
+
+    function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function initializeKnightAssignments() {
+        knightCount = 0;
+        knightAssignments.clear();
+        const knightIds = Object.entries(roles)
+            .filter(([_, role]) => role === 'Knight')
+            .map(([id, _]) => parseInt(id))
+            .sort((a, b) => a - b);
+
+        knightIds.forEach((id, index) => {
+            knightAssignments.set(id.toString(), index + 1);
+        });
+    }
+
+    initializeKnightAssignments();
+
+    function generateChatHistory() {
+        let chatHtml = '';
+        let msgId = 0;
+
+        chatHtml += `
+        <div class="round-divider" id="round-0">
+          <span class="badge bg-secondary">游戏开始</span>
+        </div>
+      `;
+
+        gameEvents.forEach((event) => {
+            if (event.round === 'assassination') {
+                chatHtml += `
+            <div class="round-divider" id="round-assassination">
+              <span class="badge bg-dark">刺杀阶段</span>
+            </div>`;
+                if (event.assassination) {
+                    const assassinInfo = getPlayerInfo(event.assassination.assassin);
+                    const targetInfo = getPlayerInfo(event.assassination.target);
+                    chatHtml += `
+              <div class="message-system">
+                刺客 ${assassinInfo.id}号 (${assassinInfo.name}) 选择刺杀 ${targetInfo.id}号 (${targetInfo.name} - ${event.assassination.target_role}).<br>
+                结果: <span class="badge ${event.assassination.success ? 'bg-danger' : 'bg-success'}">${event.assassination.success ? '成功' : '失败'}</span>
+              </div>`;
                 }
-            }, 10000);
-        }
-
-        // 关闭刺杀动画
-        window.closeAssassinationAnimation = function() {
-            const overlay = document.querySelector('.assassination-success-overlay');
-            if (overlay) {
-                overlay.style.animation = 'assassinationFadeOut 0.5s ease forwards';
-                setTimeout(() => {
-                    overlay.remove();
-                }, 500);
+                return;
             }
-        };
 
-        // 获取角色显示名称
-        function getRoleDisplayName(role) {
-            const roleDisplayNames = {
-                'Merlin': '梅林',
-                'Percival': '派西维尔',
-                'Knight': '骑士',
-                'Assassin': '刺客',
-                'Morgana': '莫甘娜',
-                'Oberon': '奥伯伦'
-            };
-            return roleDisplayNames[role] || role;
-        }
+            const roundNum = event.round;
 
-        // 播放胜利音效（可选）
-        function playAssassinationSound() {
-            try {
-                // 创建音频上下文播放音效
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // 创建一个简单的音效
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // 设置音效参数 - 低沉的警告音
-                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
-                
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 1);
-            } catch (error) {
-                console.log('音效播放失败:', error);
+            chatHtml += `
+          <div class="round-divider" id="round-${roundNum}">
+            <span class="badge bg-secondary">第 ${roundNum} 轮任务</span>
+          </div>
+        `;
+
+            if (event.leader) {
+                const leaderInfo = getPlayerInfo(event.leader);
+                chatHtml += `
+            <div class="message-system">
+              <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})<br>
+              <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
+              ${event.team_members && event.team_members.length > 0
+                        ? event.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
+                        : '无'}
+            </div>
+          `;
             }
-        }
 
-        // 添加获取玩家用户名的函数
-        function getPlayerUsername(playerId) {
-            // 从模板变量中获取用户名数组
-            const playerUsernames = {{ player_usernames|tojson if player_usernames else 'null' }};
-            
-            if (playerUsernames && Array.isArray(playerUsernames)) {
-                // playerId 是从1开始的，数组索引从0开始
-                const index = parseInt(playerId) - 1;
-                if (index >= 0 && index < playerUsernames.length) {
-                    return playerUsernames[index] || '未知用户';
-                }
+            if (event.events && event.events.length > 0) {
+                event.events.forEach(eventItem => {
+                    if (eventItem.type === "speech") {
+                        const [playerId, message, speechType, hearers] = eventItem.data;
+
+                        // 跳过有限范围发言
+                        if (speechType === "private") {
+                            return;
+                        }
+
+                        const playerInfo = getPlayerInfo(playerId);
+                        const wrapperClass = playerInfo.faction === 'blue' ? 'message-wrapper-blue' : 'message-wrapper-red';
+                        const bubbleClass = playerInfo.faction === 'blue' ? 'message-blue' : 'message-red';
+
+                        chatHtml += `
+                <div class="message-wrapper ${wrapperClass}">
+                  <div class="message-content">
+                    <div class="player-tag">
+                      ${playerInfo.id}号 <span class="badge bg-info text-dark speech-badge">公开</span>                    
+                    </div>
+                    <div class="message-bubble ${bubbleClass}">
+                      ${message}
+                    </div>
+                  </div>
+                </div>
+                <div class="clearfix"></div>
+              `;
+                    } else if (eventItem.type === "vote_attempt") {
+                        const voteAttempt = eventItem.data;
+                        const approved = voteAttempt.approved;
+                        chatHtml += `
+                <div class="vote-info">
+                  <strong>队伍投票结果:</strong>
+                  <span class="badge fs-6 ${approved ? 'bg-success' : 'bg-warning text-dark'}">
+                    ${approved ? '通过' : '拒绝'}
+                  </span>
+                  <small class="text-muted">(${voteAttempt.approve_count || 0} 赞成 / ${voteAttempt.reject_count || 0} 反对)</small>
+                </div>`;
+                    }
+                    msgId++;
+                });
             }
-            
-            return '未知用户';
+
+            if (event.mission_execution) {
+                const execution = event.mission_execution;
+                const success = execution.success;
+                chatHtml += `
+            <div class="mission-result-info">
+              <div class="alert ${success ? 'alert-info' : 'alert-danger'} d-inline-block py-1 px-3">
+                <strong>任务 ${roundNum} 执行结果:</strong>
+                ${success ? '成功' : '失败'}
+                ${execution.fail_votes !== undefined ? ` (${execution.fail_votes} 票失败)` : ''}
+              </div>
+            </div>
+          `;
+            }
+            chatHtml += `<div class="clearfix"></div>`;
+        });
+
+        chatHtml += `
+        <div class="round-divider">
+          <span class="badge bg-dark">游戏结束</span>
+        </div>
+        <div class="message-system">
+          <div class="alert ${gameInfo.winner === 'blue' ? 'alert-info' : (gameInfo.winner === 'red' ? 'alert-danger' : 'alert-secondary')} d-inline-block fw-bold">
+            ${gameInfo.winner === 'blue' ? '蓝方胜利!' : (gameInfo.winner === 'red' ? '红方胜利!' : '游戏结束')}
+          </div><br>
+          <small>原因: ${gameInfo.win_reason || '未知'}</small><br>
+        </div>
+      `;
+
+        chatContainer.innerHTML = chatHtml;
+        scrollToBottom();
+    }
+
+    // 移动端视图切换
+    const viewButtons = document.querySelectorAll('[data-view]');
+    const views = document.querySelectorAll('.mobile-view');
+
+    function switchView(viewName) {
+        views.forEach(view => {
+            if (view.id === viewName + 'View') {
+                view.style.display = 'block';
+            } else {
+                view.style.display = 'none';
+            }
+        });
+
+        viewButtons.forEach(btn => {
+            if (btn.dataset.view === viewName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchView(btn.dataset.view);
+        });
+    });
+
+    // 初始化
+    if (window.innerWidth <= 768) {
+        switchView('main');
+    }
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            views.forEach(view => {
+                view.style.display = '';
+            });
         }
     });
-    </script>
+
+    // 开场动画
+    setTimeout(() => {
+        const introAnimation = document.getElementById('introAnimation');
+        if (introAnimation) {
+            introAnimation.classList.add('fade-out');
+            setTimeout(() => {
+                introAnimation.style.display = 'none';
+            }, 500);
+        }
+    }, 3000);
+
+    // 事件监听器
+    if (scrollToBottomBtn) {
+        scrollToBottomBtn.addEventListener('click', scrollToBottom);
+    }
+
+    if (manualNextBtn) {
+        manualNextBtn.addEventListener('click', manualNextStep);
+    }
+
+    if (autoplayBtnFlow) {
+        autoplayBtnFlow.addEventListener('click', () => {
+            if (isAutoReplay) {
+                stopAutoReplay();
+            } else {
+                startAutoReplay();
+            }
+        });
+    }
+
+    // 初始化内容
+    if (!gameInfo || !gameEvents) {
+        chatContainer.innerHTML = `<div class="alert alert-danger m-3">错误：加载对局数据失败，部分信息缺失。请检查日志文件。</div>`;
+        console.error("Game data missing:", { gameInfo, gameEvents });
+    } else {
+        generateChatHistory();
+
+        // 初始化手动按钮状态
+        const messages = getAllReplayMessages();
+        updateManualButtons(messages.length);
+    }
+  });
+</script>
 {% endblock scripts %}
