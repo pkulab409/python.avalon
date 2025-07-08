@@ -170,6 +170,7 @@ def set_elo(user_id):
         logging.error(f"设置Elo失败: {str(e)}")
         abort(500, description="服务器内部错误")
 
+
 # 重置密码功能的实现
 @admin_bp.route("/admin/reset_password/<string:user_id>", methods=["POST"])
 @login_required
@@ -193,9 +194,14 @@ def reset_password(user_id):
         target_user.set_password(new_password)
         db.session.commit()
 
-        logging.info(f"管理员 '{current_user.username}' 重置了用户 '{target_user.username}' 的密码。")
+        logging.info(
+            f"管理员 '{current_user.username}' 重置了用户 '{target_user.username}' 的密码。"
+        )
 
-        return jsonify({"message": f"用户 {target_user.username} 的密码已成功重置"}), 200
+        return (
+            jsonify({"message": f"用户 {target_user.username} 的密码已成功重置"}),
+            200,
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -983,6 +989,3 @@ def start_specific_rankings():
     except Exception as e:
         logging.error(f"启动指定榜单失败: {str(e)}")
         return jsonify({"status": "error", "message": f"启动失败: {str(e)}"}), 500
-
-
-
