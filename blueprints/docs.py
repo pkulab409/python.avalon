@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # dmcnczy 25/4/28
 """提供文档页面"""
-
+  
 
 from flask import Blueprint, render_template
 
@@ -21,7 +21,7 @@ def index2():
 
 @docs_bp.route("/elo")
 def index3():
-    return render_template("/docs/elo.html")
+    return render_template("/docs/game.html")
 
 
 @docs_bp.route("/server_func")

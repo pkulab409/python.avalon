@@ -2,79 +2,418 @@
 {% block title %}
     文档 - 阿瓦隆AI对战平台
 {% endblock title %}
-{% block content %}
-    <div class="container mt-4 col-md-7">
-        <div id="markdown-content"></div>
-        <!-- 1. 先加载highlight.js核心库 -->
-        <script src="{{ url_for('static', filename='libs/highlight/common.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='libs/highlight/highlight.min.js') }}"></script>
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='libs/highlight/github.min.css') }}">
-        <!-- 2. 再加载marked -->
-        <script src="{{ url_for('static', filename='libs/marked/marked.min.js') }}"></script>
-        <!-- 3. 最后加载KaTeX -->
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='libs/katex/katex.min.css') }}">
-        <script defer
-                src="{{ url_for('static', filename='libs/katex/katex.min.js') }}"></script>
-        <script defer
-                src="{{ url_for('static', filename='libs/katex/auto-render.min.js') }}"></script>
-        <script>
-      // 4. 配置marked支持代码高亮和图片（必须在所有库加载完成后）
-      marked.setOptions({
-        breaks: true,
-        gfm: true,  // 启用 GitHub 风格的 Markdown
-        headerIds: true,
-        mangle: false,
-        sanitize: false,  // 允许 HTML 标签，这样图片才能正常显示
-        highlight: function(code, lang) {
-          // 确保hljs已加载
-          if (typeof hljs !== 'undefined') {
-            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-            return hljs.highlight(code, { language }).value;
-          }
-          return code; // 如果hljs未加载则直接返回
-        }
-      });
+{% block content %}  
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- 左侧导航栏 -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-header">
+                        <h5 class="sidebar-title">
+                            <i class="bi bi-journal-text"></i>
+                            文档目录
+                        </h5>
+                    </div>
+                    <ul class="nav flex-column" id="docs-nav">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-doc="intro">
+                                <i class="fas fa-book"></i> 快速开始
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-doc="README">
+                                <i class="fas fa-book"></i> 游戏规则
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-doc="code_submission_guide">
+                                <i class="fas fa-code"></i> 代码规范
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-doc="elo">
+                                <i class="fas fa-trophy"></i> ELO规则
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-doc="server_func">
+                                <i class="fas fa-server"></i> 平台架构
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
 
-      // 5. 加载并渲染Markdown
-      fetch('/static/docs/{{docname}}.md')
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP错误! 状态码: ${response.status}`);
-          return response.text();
-        })
-        .then(text => {
-          const html = marked.parse(text);
-          document.getElementById('markdown-content').innerHTML = html;
-
-          // 6. 确保代码高亮
-          if (typeof hljs !== 'undefined') {
-            hljs.highlightAll();
-          }
-
-          // 7. 渲染数学公式（添加延迟确保KaTeX加载完成）
-          setTimeout(() => {
-            if (typeof renderMathInElement !== 'undefined') {
-              renderMathInElement(document.getElementById('markdown-content'), {
-                delimiters: [
-                  { left: '$$', right: '$$', display: true },
-                  { left: '$', right: '$', display: false },
-                  { left: '\\(', right: '\\)', display: false },
-                  { left: '\\[', right: '\\]', display: true }
-                ],
-                throwOnError: false,
-                trust: true
-              });
-            }
-          }, 100);
-        })
-        .catch(error => {
-          console.error('加载错误:', error);
-          document.getElementById('markdown-content').innerHTML = 
-            "⚠️ 文档加载失败: " + error.message;
-        });
-        </script>
+            <!-- 右侧文档内容区 -->
+            <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" id="doc-title">文档</h1>
+                </div>
+                <div id="markdown-content"></div>
+            </main>
+        </div>
     </div>
+
+    <!-- 1. 先加载highlight.js核心库 -->
+    <script src="{{ url_for('static', filename='libs/highlight/common.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='libs/highlight/highlight.min.js') }}"></script>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='libs/highlight/github.min.css') }}">
+    <!-- 2. 加载KaTeX -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='libs/katex/katex.min.css') }}">
+    <script defer
+            src="{{ url_for('static', filename='libs/katex/katex.min.js') }}"></script>
+    <script defer
+            src="{{ url_for('static', filename='libs/katex/auto-render.min.js') }}"></script>
+    <!-- 3. 最后加载marked -->
+    <script src="{{ url_for('static', filename='libs/marked/marked.min.js') }}"></script>
+
+    <style>
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .sidebar-sticky {
+            position: sticky;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: 0.5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 1rem;
+        }
+        .sidebar-title {
+            color: #495057;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+        .sidebar-title i {
+            margin-right: 0.75rem;
+            color: #4e54c8;
+            font-size: 1.2rem;
+        }
+        .nav-link {
+            color: #495057;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.2rem 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        .nav-link:hover {
+            color: #4e54c8;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-color: #4e54c8;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(78, 84, 200, 0.15);
+        }
+        .nav-link.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+            font-weight: 600;
+            border-color: #4e54c8;
+            box-shadow: 0 4px 12px rgba(78, 84, 200, 0.3);
+        }
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 18px;
+            text-align: center;
+        }
+        #markdown-content {
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+        #markdown-content h1, #markdown-content h2, #markdown-content h3 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        #markdown-content h1 {
+            border-bottom: 3px solid #4e54c8;
+            padding-bottom: 0.5rem;
+        }
+        #markdown-content h2 {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.3rem;
+        }
+        #markdown-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        #markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+        }
+        #markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            position: relative;
+            margin: 1.5em 0;
+        }
+        #markdown-content blockquote {
+            border-left: 4px solid #4e54c8;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            padding: 1rem;
+        }
+        #markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1.5em 0;
+        }
+        #markdown-content th, #markdown-content td {
+            border: 1px solid #222 !important;
+            padding: 0.5em 1em;
+            text-align: center;
+        }
+        #markdown-content th {
+            background: #f3f4fa;
+            font-weight: bold;
+        }
+        #markdown-content ul ul, #markdown-content ol ol {
+            margin-bottom: 2em;
+        }
+        #markdown-content li {
+            margin-bottom: 0.5em;
+        }
+        #markdown-content li:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* 数学公式居中样式 */
+        #markdown-content .katex-display {
+            text-align: center !important;
+            margin: 1em 0 !important;
+        }
+        
+        /* 确保块级数学公式居中 */
+        #markdown-content .katex {
+            text-align: center;
+        }
+        
+        /* 块级数学公式容器居中 */
+        #markdown-content p:has(.katex-display),
+        #markdown-content div:has(.katex-display) {
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        // 4. 配置marked支持代码高亮和图片（必须在所有库加载完成后）
+        marked.setOptions({
+            breaks: true,
+            gfm: true,  // 启用 GitHub 风格的 Markdown
+            headerIds: true,
+            mangle: false,
+            sanitize: false,  // 允许 HTML 标签，这样图片才能正常显示
+        });
+
+        // 文档标题映射
+        const docTitles = {
+            'intro': '快速开始',
+            'README': '游戏规则',
+            'code_submission_guide': '代码规范',
+            'elo': '计分规则',
+            'server_func': '平台架构'
+        };
+
+        // 加载文档函数
+        function loadDoc(docname) {
+            // 更新页面标题
+            const titleElement = document.getElementById('doc-title');
+            titleElement.textContent = docTitles[docname] || docname;
+
+            // 更新导航高亮
+            document.querySelectorAll('#docs-nav a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-doc') === docname) {
+                    link.classList.add('active');
+                }
+            });
+
+            // 加载并渲染Markdown
+            fetch('/static/docs/' + docname + '.md')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                    return response.text();
+                })
+                .then(text => {
+                    // 预处理，确保数学公式不被转义
+                    let processedText = text;
+                    
+                    console.log('原始文本长度:', text.length);
+                    console.log('原始文本中的$$数量:', (text.match(/\$\$/g) || []).length);
+                    console.log('原始文本中的$数量:', (text.match(/\$/g) || []).length);
+                    
+                    // 保护数学公式，避免被marked处理
+                    const mathBlocks = [];
+                    const mathInlines = [];
+                    let blockIndex = 0;
+                    let inlineIndex = 0;
+                    
+                    // 替换块级公式 - 使用更独特的占位符
+                    processedText = processedText.replace(/\$\$([\s\S]*?)\$\$/g, (match, content) => {
+                        const placeholder = `<!--MATH_BLOCK_${blockIndex}-->`;
+                        mathBlocks[blockIndex] = match;
+                        console.log(`生成块级占位符 ${blockIndex}:`, placeholder);
+                        blockIndex++;
+                        return placeholder;
+                    });
+                    
+                    // 替换行内公式 - 使用更独特的占位符
+                    processedText = processedText.replace(/\$([^$\n]+?)\$/g, (match, content) => {
+                        const placeholder = `<!--MATH_INLINE_${inlineIndex}-->`;
+                        mathInlines[inlineIndex] = match;
+                        console.log(`生成行内占位符 ${inlineIndex}:`, placeholder);
+                        inlineIndex++;
+                        return placeholder;
+                    });
+
+                    console.log('处理后的文本长度:', processedText.length);
+                    console.log('生成的块级占位符数量:', mathBlocks.length);
+                    console.log('生成的行内占位符数量:', mathInlines.length);
+                    
+                    const html = marked.parse(processedText);
+                    console.log('marked解析后的HTML长度:', html.length);
+                    
+                    // 恢复数学公式
+                    let finalHtml = html;
+                    
+                    console.log('开始恢复数学公式...');
+                    console.log('块级公式数量:', mathBlocks.length);
+                    console.log('行内公式数量:', mathInlines.length);
+                    
+                    // 恢复块级公式
+                    mathBlocks.forEach((block, index) => {
+                        const placeholder = `<!--MATH_BLOCK_${index}-->`;
+                        console.log(`恢复块级公式 ${index}:`, placeholder, '->', block.substring(0, 50) + '...');
+                        finalHtml = finalHtml.replace(placeholder, block);
+                    });
+                    
+                    // 恢复行内公式
+                    mathInlines.forEach((inline, index) => {
+                        const placeholder = `<!--MATH_INLINE_${index}-->`;
+                        console.log(`恢复行内公式 ${index}:`, placeholder, '->', inline);
+                        finalHtml = finalHtml.replace(placeholder, inline);
+                    });
+                    
+                    console.log('恢复完成，最终HTML长度:', finalHtml.length);
+                    console.log('最终HTML中的$$数量:', (finalHtml.match(/\$\$/g) || []).length);
+                    console.log('最终HTML中的$数量:', (finalHtml.match(/\$/g) || []).length);
+                    console.log('最终HTML中的占位符数量:', (finalHtml.match(/<!--MATH_/g) || []).length);
+                    
+                    document.getElementById('markdown-content').innerHTML = finalHtml;
+
+                    // 确保代码高亮
+                    if (typeof hljs !== 'undefined') {
+                        hljs.highlightAll();
+                    }
+
+                    // 渲染数学公式
+                    function renderMath() {
+                        if (typeof renderMathInElement !== 'undefined') {
+                            try {
+                                console.log('开始渲染数学公式...');
+                                const mathElements = document.querySelectorAll('p, div');
+                                let mathCount = 0;
+                                mathElements.forEach(el => {
+                                    if (el.textContent.includes('$$')) mathCount++;
+                                });
+                                console.log('找到的数学公式数量:', mathCount);
+                                renderMathInElement(document.getElementById('markdown-content'), {
+                                    delimiters: [
+                                        { left: '$$', right: '$$', display: true },
+                                        { left: '$', right: '$', display: false },
+                                        { left: '\\(', right: '\\)', display: false },
+                                        { left: '\\[', right: '\\]', display: true }
+                                    ],
+                                    strict: false,
+                                    trust: true,
+                                    macros: {
+                                        "\\RR": "\\mathbb{R}",
+                                        "\\NN": "\\mathbb{N}",
+                                        "\\ZZ": "\\mathbb{Z}",
+                                        "\\QQ": "\\mathbb{Q}",
+                                        "\\CC": "\\mathbb{C}"
+                                    },
+                                    fleqn: false,
+                                    leqno: false,
+                                    output: 'html',
+                                    minRuleThickness: 0.05,
+                                    colorIsTextColor: false,
+                                    maxSize: Infinity,
+                                    maxExpand: 1000,
+                                    allowedProtocols: ['http', 'https', 'mailto', '_relative'],
+                                    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                                    ignoredClasses: [],
+                                    errorCallback: function(msg) {
+                                        console.warn('KaTeX错误:', msg);
+                                    },
+                                    throwOnError: false
+                                });
+                                console.log('数学公式渲染完成');
+                            } catch (error) {
+                                console.error('数学公式渲染错误:', error);
+                            }
+                        } else {
+                            console.log('KaTeX未加载，等待中...');
+                            setTimeout(renderMath, 200);
+                        }
+                    }
+                    
+                    // 立即尝试渲染，如果失败则延迟重试
+                    renderMath();
+                })
+                .catch(error => {
+                    console.error('加载错误:', error);
+                    document.getElementById('markdown-content').innerHTML = 
+                        "⚠️ 文档加载失败: " + error.message;
+                });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始加载默认文档
+            loadDoc('intro');
+
+            // 绑定导航点击事件
+            document.querySelectorAll('#docs-nav a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const docname = this.getAttribute('data-doc');
+                    loadDoc(docname);
+                    
+                    // 更新URL（不刷新页面）
+                    history.replaceState(null, '', '/docs/' + docname);
+                });
+            });
+        });
+    </script>
+
     <!-- 引入 ECharts -->
     <script src="{{ url_for('static', filename='libs/echarts/echarts.min.js') }}"></script>
     <!-- 引入 jQuery 和 Bootstrap -->

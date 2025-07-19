@@ -1,194 +1,196 @@
-🧭大作业对战平台 用户文档
+### 一、项目概述
 
----
+《图灵阿瓦隆-Tuvalon》是一个基于经典桌游《阿瓦隆》的AI对战平台。项目核心目标是让用户编写自己的AI程序，通过平台进行对战，并利用大语言模型（LLM）辅助AI进行决策和交流。平台提供用户认证、AI代码管理、在线匹配、实时对战、历史回放、天梯排行等功能。
 
-# 调用服务器功能
+### 二、技术文档
 
-服务器为大家提供了辅助 API 工具包，用户可以通过 [指导](./code_submission_guide.md#可调用的辅助API) 导入。为与后文保持一致，我们在这里重复一遍大家所写的游戏代码的 import 过程。
+#### 1. 游戏规则与核心逻辑
 
-```python
-from game.avalon_game_helper import (
-    write_into_private,
-    read_private_lib,
-    read_public_lib,
-    askLLM
-)
+游戏的详细规则、背景故事、角色设定、胜负条件等在项目的 `README.md` 及 `platform/static/docs/README.md` 中有详细阐述。核心玩法围绕两大阵营（骑士方和反抗军方）在至多五轮任务中的博弈，融合了身份隐藏、推理、投票、执行任务以及最终的刺杀环节。
+
+* **阵营与角色**：包含梅林、派西维尔、骑士（蓝方）和莫甘娜、刺客、奥伯伦（红方），每个角色拥有独特能力和信息视角。
+* **游戏流程**：夜晚阶段（角色互认、梅林/派西维尔获取信息）-> 任务阶段（队长组队 -> 发言 -> 公投表决 -> 任务执行）-> （可能发生的）刺杀阶段。
+* **发言机制**：公开讨论
+* **胜负判定**：
+    * 蓝方：3轮任务成功且梅林未被刺杀。
+    * 红方：3轮任务失败，或蓝方3轮任务成功后刺客成功刺杀梅林。
+    * 异常结束：玩家算法bug或超时/超token等犯规行为导致该玩家判负。
+
+#### 2. 平台架构
+
+项目采用Flask框架构建Web应用，前后端交互。
+
+* **后端核心**：
+    * **应用入口 (`app.py`)**：Flask应用初始化，配置加载，蓝图注册，数据库和登录管理器初始化，预设数据（用户、AI）的初始化。
+    * **蓝图 (`blueprints`目录)**：
+        * `main.py`：处理主页等基本路由。
+        * `auth.py`：负责用户认证（登录、注册、登出），使用Flask-Login和Flask-WTF进行表单处理和会话管理。
+        * `ai.py`：AI代码管理（上传、编辑、删除、激活）。
+        * `game.py`：游戏大厅、创建对战、查看对战详情、下载日志、取消对战等。
+        * `profile.py`：用户个人资料及对战历史。
+        * `ranking.py`：显示排行榜。
+        * `visualizer.py`：游戏对局回放和JSON上传。
+        * `admin.py`：管理员后台功能（用户管理、ELO修改、对局管理、自动对战控制等）。
+        * `docs.py`：提供Markdown文档的在线渲染。
+    * **数据库 (`database`目录)**：
+        * `models.py`：定义了User, AICode, GameStats, Battle, BattlePlayer等SQLAlchemy数据模型。
+        * `action.py`：封装了CRUD数据库操作函数。
+        * `base.py`：创建SQLAlchemy (`db`) 和LoginManager (`login_manager`) 实例。
+        * `__init__.py`：包初始化，导出模型和操作函数，配置Flask-Login的`user_loader`。
+        * `关于avalon数据库架构的解读.md`：对数据库设计的解释。
+    * **游戏核心逻辑 (`game`目录)**：
+        * `referee.py`：核心裁判逻辑，负责主持游戏流程、加载玩家代码、执行玩家动作、判定胜负、记录日志等。包含`AvalonReferee`类，通过`safe_execute`安全调用玩家代码。
+        * `avalon_game_helper.py`：为玩家AI提供辅助API，如调用LLM (`askLLM`)、读写公私有日志库等。近期重构为面向对象并引入线程本地存储以保证多线程环境下的状态一致性。 [cite: 2]
+        * `battle_manager.py`：单例模式的对战管理器，负责创建、管理和监控所有对战线程。
+        * `observer.py`：记录游戏快照，用于前端可视化回放。
+        * `automatch.py`：自动对战匹配和执行逻辑。
+        * `restrictor.py`：限制玩家代码中`__builtins__`的访问，提供安全的模块导入器。
+        * `basic_player.py`, `smart_player.py`, `idiot_player.py`, `smart_player_new.py`: 不同策略的示例AI玩家代码。
+    * **服务层 (`services`目录)**：
+        * `battle_service.py`：处理与对战相关的数据库交互和服务，如更新对战状态、处理结果、获取AI代码路径。
+    * **工具类 (`utils`目录)**：
+        * `automatch_utils.py`：提供获取`AutoMatch`单例的工具函数。
+        * `battle_manager_utils.py`：提供获取`BattleManager`单例的工具函数。
+        * `db_utils.py`：数据库相关工具函数，如构建日志路径、获取AI代码路径等。
+    * **配置 (`config`目录)**：
+        * `config.py`：Flask应用配置类，从`config.yaml`加载配置。
+        * `config.yaml`：YAML格式的配置文件，包含数据库URI、密钥、AI代码上传目录、初始用户等。
+* **前端 (`templates`目录)**：使用Jinja2模板引擎渲染HTML页面，涵盖认证、AI管理、游戏大厅、对战视图、排行榜、文档、个人资料、管理员面板等。
+* **静态文件 (`static/docs`目录)**：存放Markdown格式的文档，通过`docs.py`蓝图进行渲染。
+
+#### 3. AI玩家代码提交流程与接口
+
+玩家需要提交包含特定接口的Python类 (`Player`或`MyStrategy`)。
+
+* **核心接口 (`Player`类 - 参考 `documentation/document4users/code_submission_guide.md` 及 `platform/static/docs/code_submission_guide.md`)**：
+    * `__init__(self)`: 初始化玩家状态。
+    * `set_player_index(self, index: int)`: 设置玩家编号。
+    * `set_role_type(self, role_type: str)`: 设置玩家角色。
+    * `pass_role_sight(self, role_sight: dict[str, int])`: 传递夜晚视野信息。
+    <!-- * `pass_map(self, map_data: list[list[str]])`: 传递地图数据。 wjjpku 25/07/07-->
+    <!-- * `pass_position_data(self, player_positions: dict[int,tuple])`: 传递玩家位置信息。 -->
+    * `pass_message(self, content: tuple[int, str])`: 接收其他玩家发言。
+    * `pass_mission_members(self, leader: int, members: list[int])`: 告知本轮队长及队员。
+    * `decide_mission_member(self, team_size: int) -> list[int]`: （队长）选择任务成员。
+    <!-- * `walk(self) -> tuple[str, ...]`: 返回移动指令。 -->
+    * `say(self) -> str`: 发言。
+    * `mission_vote1(self) -> bool`: 对队伍提案进行公投。
+    * `mission_vote2(self) -> bool`: 任务执行投票（决定成功/失败）。
+    * `assass(self) -> int`: （刺客）选择刺杀目标。
+* **辅助API (由 `avalon_game_helper.py` 提供)**：
+    * `askLLM(prompt: str) -> str`: 调用大语言模型。
+    * `read_public_lib() -> list[dict]`: 读取公共对局记录。
+    * `read_private_lib() -> list[str]`: 读取私有存储。
+    * `write_into_private(content: str) -> None`: 写入私有存储。
+* **代码限制**：通过`restrictor.py`限制导入的库和内建函数，保证安全性。允许 `random`, `re`, `collections`, `math`, 以及 `game.avalon_game_helper`。
+* **代码执行**：`referee.py` 中的 `_load_codes` 和 `load_player_codes` 方法负责动态加载、实例化和执行玩家代码。
+
+#### 4. 数据存储与格式
+
+* **数据库**：使用SQLite (默认 `platform.db`)，通过SQLAlchemy进行ORM。模型定义见 `database/models.py`。
+* **AI代码文件**：存储在服务器文件系统中，路径由`config.yaml`中的`AI_CODE_UPLOAD_FOLDER`指定。
+* **游戏日志**：
+    * **公共日志 (`game_{GAME_ID}_public.json`)**: 记录游戏流程中的公开事件，如游戏开始、夜晚结束、任务开始、队伍提名、发言、移动、投票结果、任务结果、刺杀、游戏结束等。详细格式见 `documentation/technical_docs/lib_data_format.md` 及 `documentation/document4users/server_func.md`。
+    * **私有日志 (`game_{GAME_ID}_player_{PLAYER_ID}_private.json`)**: 存储每个玩家的私有笔记和LLM交互历史。格式包含`logs` (玩家自定义内容) 和 `llm_history` (对话记录)，`llm_call_counts` (LLM调用计数)。
+    * **快照日志 (`game_{GAME_ID}_archive.json`)**: 由`Observer`类 生成，记录详细的游戏事件快照，用于可视化回放。事件类型包括阶段（Phase）、事件（Event）、动作（Action）、标识（Sign）、信息（Information）、大事件（Big_Event）、地图（Map）、Bug。格式说明见 `platform/game/README_snapshot.md`。 示例见 `platform/example/example_game_replay.json`。
+
+### 三、项目架构
+
+#### 1. 宏观架构
+
+本项目是一个典型的Model-View-Controller (MVC) 模式的Web应用，结合了游戏服务逻辑：
+
+* **Model**: 由 `database/models.py` 定义，通过SQLAlchemy与数据库交互，`database/action.py` 封装了数据操作逻辑。
+* **View**: 由 `templates` 目录下的HTML文件构成，通过Jinja2模板引擎渲染。
+* **Controller**: 由 `blueprints` 目录下的各个Python模块实现，处理HTTP请求，与服务层、模型层交互，并返回视图或JSON数据。
+* **Game Services**: 位于 `game` 和 `services` 目录，处理核心游戏逻辑、AI执行、对战管理等。
+
+#### 2. 目录结构（核心部分）
+
+```
+pkudsa.avalon/
+├── app.py                      # Flask应用主入口和初始化
+├── requirements.txt            # Python依赖
+├── config/                     # 配置文件夹
+│   ├── config.py               # 配置加载逻辑
+│   └── config.yaml             # 具体配置项
+├── blueprints/                 # Flask蓝图，模块化应用功能
+│   ├── admin.py                # 管理员功能
+│   ├── ai.py                   # AI代码管理
+│   ├── auth.py                 # 用户认证
+│   ├── docs.py                 # 文档展示
+│   ├── game.py                 # 游戏大厅与对战流程控制
+│   ├── main.py                 # 主页等
+│   ├── profile.py              # 用户资料
+│   ├── ranking.py              # 排行榜
+│   └── visualizer.py           # 游戏回放可视化
+├── database/                   # 数据库相关
+│   ├── __init__.py
+│   ├── action.py               # CRUD操作
+│   ├── base.py                 # SQLAlchemy和LoginManager实例
+│   ├── models.py               # 数据模型定义
+│   └── 关于avalon数据库架构的解读.md
+├── game/                       # 游戏核心逻辑
+│   ├── __init__.py
+│   ├── avalon_game_helper.py   # 玩家AI辅助工具 (LLM, 日志)
+│   ├── automatch.py            # 自动匹配逻辑
+│   ├── battle_manager.py       # 对战管理器 (单例)
+│   ├── basic_player.py         # 基础AI示例
+│   ├── idiot_player.py         # 更简单的AI示例
+│   ├── observer.py             # 游戏快照记录器
+│   ├── referee.py              # 游戏裁判核心逻辑
+│   ├── restrictor.py           # AI代码执行环境限制
+│   ├── smart_player.py         # 智能AI示例
+│   └── smart_player_new.py     # 另一个智能AI示例
+├── services/                   # 业务逻辑服务
+│   └── battle_service.py       # 对战相关服务
+├── static/                     # 静态文件 (CSS, JS, images, docs)
+│   └── docs/                   # Markdown文档
+├── templates/                  # Jinja2 HTML模板
+│   ├── admin/
+│   ├── ai/
+│   ├── auth/
+│   ├── docs/
+│   ├── errors/
+│   ├── profile/
+│   ├── visualizer/
+│   ├── base.html
+│   ├── battle_completed.html
+│   ├── battle_ongoing.html
+│   ├── create_battle.html
+│   ├── index.html
+│   ├── lobby.html
+│   └── ranking.html
+└── utils/                      # 工具函数
+    ├── __init__.py
+    ├── automatch_utils.py
+    ├── battle_manager_utils.py
+    └── db_utils.py
 ```
 
-## 对局中的公有库  
+#### 3. 技术栈
 
-对局中， **公有库（Public Library）** 提供了对局中的公开信息，这对代码的决策分析非常重要。
+* **后端**: Python, Flask, Flask-Login, Flask-SQLAlchemy, Flask-WTF, Werkzeug
+* **数据库**: SQLite (可配置其他SQLAlchemy支持的数据库)
+* **前端**: HTML, Bootstrap, JavaScript (用于动态更新和交互，如对战状态轮询、地图渲染等)
+* **LLM**: OpenAI API (通过`avalon_game_helper.py` 接入，可配置不同模型如DeepSeek)
+* **配置**: YAML
+* **其他**: `python-dotenv` (环境变量管理), `PyYAML` (YAML解析), `requests` (可能用于内部API调用或未来扩展), `Pillow` (图像处理，可能用于头像等), `faker` (测试数据生成), `email_validator` (邮箱验证)。
 
-### 函数调用示例
+#### 4. 关键组件交互
 
-```python
-public_records = read_public_lib()
-# 返回示例：
-# [
-#   {"type": "game_start", "game_id": 12345, "player_count": 7, "map_size": 9},
-#   {"type": "night_phase_complete"},
-#   ...
-# ]
-```
-
-### 返回数据格式详解
-
-`read_public_lib()` 返回一个 **Python 列表**，列表由一串 **Python 字典**组成，每个字典代表一条游戏事件。
-
-每个代表游戏事件的字典里，**一定会出现 `"type"` 键**。它对应不同的值，表示不同的游戏事件类型。
-
-`"type"` 键对应的值不同，字典中**余下的键值对**也不同。`"type"` 键对应的值与后续键值对的对应关系如下：
-
-#### **`"game_start"`**：游戏开始
-  - <span style="font-size: small;">（后面的键值对见下，冒号前面的字符串是键，冒号后面表示值的数据类型）</span>
-  - `"game_id": int`：游戏唯一编号
-  - `"player_count": int`：玩家总数
-  - `"map_size": int`：地图尺寸
-
-#### **`"night_phase_complete"`**：夜晚阶段结束，无额外字段
-  - ~~（你总不会认为能在此处偷偷摸摸地拿到所有角色的身份吧？）~~
-
-#### **`"mission_start"`**：任务回合开始
-  - `"round: int"`：回合序号（1~5）
-  - `"leader": int`：本回合队长玩家ID
-  - `"member_count": int`
-
-#### **`"team_proposed"`**：队长提名团队
-  - `"round": int`：回合序号
-  - `"vote_round": int`：本回合第几次投票
-  - `"leader": int`：提名者（队长）ID
-  - `"members": list[int]`：被提名的玩家ID列表
-  - \* 从这里开始，调用公有库显得重要了。我们在这里附上 Python 示例：
-
-  ```python
-  # 假如第2轮发言前，需要查看第1轮的最后一次队长提名团队信息
-  # 其他代码省略……
-  self.cur_round = 2
-
-  def say() -> str:
-      '''发言'''
-      last_round_team = {}
-      public_records = read_public_lib()
-      idx = len(public_records) - 1
-      while True:
-          if public_records[idx]["type"] == "team_proposed" and public_records[idx]["round"] == self.cur_round - 1:
-              last_round_team["leader"] = public_records[idx]["leader"]
-              last_round_team["members"] = public_records[idx]["members"]
-              break
-          if idx < 0:  # 请大家注意异常处理！
-              return "我还在思考。"
-          idx -= 1
-      return f"请大家参考上轮队伍信息。队长是{last_round_team["leader"]}号，队员是{" ".join(map(str, last_round_team["members"]))}，对比这一轮，说明……"
-  ```
-
-#### **`"global_speech"`**：全图广播发言
-  - `"round": int`：回合序号
-  - `"speeches": list[list]`：发言列表，格式 `[[player_id, text], [player_id, text], …]`
-
-#### **`"movement"`**：玩家移动记录
-  - `"round": int`：回合序号
-  - `"movements": list[dict]`：列表，每项是一个字典，键值对如下：
-    - `"player_id": int`：移动的玩家ID
-    - `"requested_moves": list[str]`：请求的移动方向列表
-    - `"executed_moves": list[str]`：实际执行的移动列表
-    - `"final_position": list[int]`：最终坐标 `[x, y]`
-
-#### **`limited_speech`**：有听力范围限制的发言
-  - `"round": int`：回合序号
-
-#### **`"public_vote"`**：公投表决
-  - `"round": int`：回合序号
-  - `"votes": dict`：字典，键为玩家ID（字符串类型），值为 `True`/`False`
-  - `"approve_count": int`：赞成票数
-  - `"result": str`：结果字符串，可能为 `"approved"`、`"rejected"`
-
-#### **`"team_rejected"`**：团队被否决
-  - `"round": int`：回合序号
-  - `"vote_round": int`：本回合第几次投票
-  - `"approve_count": int`：当次赞成票数
-  - `"next_leader": int`：下一个队长玩家ID
-
-#### **`"consecutive_rejections"`**：连续否决触发强制组队
-  - `"round": int`：回合序号
-
-#### **`"mission_execution"`**：任务执行
-  - `"round": int`：回合序号
-  - `"fail_votes": int`：失败票数
-  - `"success": bool`：布尔，`True` 表示任务成功
-
-#### **`"mission_result"`**：任务结果总结
-  - `"round":int`：回合序号
-  - `"result": str`：`"success"` 或 `"fail"`
-  - `"blue_wins": int`：目前为止，蓝方胜利轮数
-  - `"red_wins": int`：目前为止，红方胜利轮数
-
-#### **`"assassination"`**：刺杀阶段
-  - `"assassin": int`：刺客玩家ID
-  - `"target": int`：目标玩家ID
-  - `"target_role": str`：目标角色名称（公开）
-  - `"success": bool`：布尔，是否刺杀成功
-
-#### **`"game_end"`**：游戏结束
-  - `"result": dict`：字典，包含以下键值对：
-    - `"blue_wins": int`、`"red_wins": int`（轮数）
-    - `"rounds_played": int`（总回合数）
-    - `"roles": dict`：玩家角色映射 `{player_id: role}`
-    - `"public_log_file": str`：完整日志文件路径
-    - `"winner": str`：`"blue"` 或 `"red"`
-    - `"win_reason": str`：获胜原因，如 `"assassination_success"`
-
----
-
-## 对局中的私有库
-
-对局中，一些私人的“小心思”可以放在 **私有库（Private Library）** 中，增加效率。
-
-- **写入私有库**：\
-
-  - 可以通过下面代码将任意字符串写入私有库中。
-
-  ```python
-  write_into_private("1号玩家动机不纯。")
-  write_into_private("3号玩家动机不纯。")
-  ```
-
-  - `write_into_private` 函数被执行之后，服务器会将您所输入的字符串贴上时间戳之后存储到私有库中。
-
-- **读取私有库**：
-
-  - 可以通过下面代码读取私有库的所有内容。
-
-  ```python
-  private_data = read_private_lib()  # 返回一个字典列表，每个字典表示一条记录。
-  # 返回示例：
-  # [
-  #     {
-  #       "timestamp": 1745396437.1877804,
-  #       "content": "1号玩家动机不纯。"
-  #     },
-  #     {
-  #       "timestamp": 1745396438.1877804,
-  #       "content": "3号玩家动机不纯。"
-  #     },
-  # ]
-  ```
-
----
-
-## 大语言模型API
-
-**注意：我们对大语言模型做出了 token 调用限制，以防止程序对大语言模型的过度依赖。**
-
-**具体限制策略：**
-
-1. **一次输入/输出限制**
-
-  - 输入提示（`prompt`）长度最多 **500 tokens** 
-
-  - llm输出响应自动截断至 **500 tokens** 
-
-2. **总输入/输出限制**
-
-  - $输入长度 \times \frac{1}{4} + 输出长度 \times \frac{3}{4}$ 不能超过 **3000**
-
-  - 如果超出 3000不会报错，但会给予一定的 **ELO 分数惩罚**
+1.  **用户请求**: 用户通过浏览器与Flask应用交互，请求被路由到相应的蓝图处理函数。
+2.  **认证与授权**: `auth.py` 和Flask-Login处理用户登录状态，`@login_required` 和 `@admin_required` (自定义装饰器) 控制访问权限。
+3.  **AI代码管理**: 用户通过`ai.py` 对应的页面上传、管理AI。代码文件存储在服务器，元数据存入数据库。
+4.  **对战创建与执行**:
+    * 用户通过`game.py` 蓝图创建对战，选择参与者和AI。
+    * `BattleManager` (`battle_manager.py`) 单例接收创建请求，启动一个新的对战线程。
+    * 每个对战线程中，`AvalonReferee` (`referee.py`) 实例被创建。
+    * `Referee` 加载玩家AI代码 (使用`restrictor.py` 限制环境)，初始化游戏（如角色），并按游戏规则驱动流程。
+    * 玩家AI通过`avalon_game_helper.py` 提供的接口与LLM交互、记录私有信息。
+    * `Observer` (`observer.py`) 记录游戏快照。
+    * `BattleService` (`battle_service.py`) 用于裁判与数据库之间的交互，如更新对战状态。
+5.  **数据持久化**: `database/action.py` 中的函数被各模块调用以操作数据库。
+6.  **结果展示与回放**: 对战结束后，结果存入数据库。用户可通过`profile.py` 查看历史，`visualizer.py` 提供对局回放（读取`_archive.json`快照文件）。
+7.  **排行榜**: `ranking.py` 从数据库提取统计数据生成排行榜。
+8.  **自动对战**: `automatch.py` 和 `automatch_utils.py` 实现后台自动匹配和进行对战的逻辑，主要由管理员控制。
