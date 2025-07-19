@@ -196,19 +196,19 @@ $$
 
 - **蓝方**平均ELO 1500，**红方**平均ELO 1550
 
-<div style="height: 20px;"></div>
-
 ### 计算步骤
 
-#### 步骤1：预期胜率
+**步骤1：预期胜率**
 
 $$
 \text{预期胜率}_{\text{蓝方}} = \frac{1}{1 + 10^{(1550-1500)/400}} \approx 0.45
 $$
 
-<div style="height: 20px;"></div>
+<div style="height: 30px;"></div>
 
-#### 步骤2：加/减分
+**步骤2：加/减分**
+
+<div style="height: 10px;"></div>
 
 $$
 \Delta ELO = 20 \times (1 - 0.45) = 20 \times 0.55 = +11
