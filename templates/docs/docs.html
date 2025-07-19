@@ -2,7 +2,7 @@
 {% block title %}
     文档 - 阿瓦隆AI对战平台
 {% endblock title %}
-{% block content %}  
+{% block content %}
     <div class="container-fluid mt-4">
         <div class="row">
             <!-- 左侧导航栏 -->
@@ -43,7 +43,6 @@
                     </ul>
                 </div>
             </nav>
-
             <!-- 右侧文档内容区 -->
             <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -53,7 +52,6 @@
             </main>
         </div>
     </div>
-
     <!-- 1. 先加载highlight.js核心库 -->
     <script src="{{ url_for('static', filename='libs/highlight/common.min.js') }}"></script>
     <script src="{{ url_for('static', filename='libs/highlight/highlight.min.js') }}"></script>
@@ -68,7 +66,6 @@
             src="{{ url_for('static', filename='libs/katex/auto-render.min.js') }}"></script>
     <!-- 3. 最后加载marked -->
     <script src="{{ url_for('static', filename='libs/marked/marked.min.js') }}"></script>
-
     <style>
         .sidebar {
             position: sticky;
@@ -221,7 +218,6 @@
             text-align: center;
         }
     </style>
-
     <script>
         // 4. 配置marked支持代码高亮和图片（必须在所有库加载完成后）
         marked.setOptions({
@@ -412,11 +408,10 @@
                 });
             });
         });
-    </script>
-
-    <!-- 引入 ECharts -->
-    <script src="{{ url_for('static', filename='libs/echarts/echarts.min.js') }}"></script>
-    <!-- 引入 jQuery 和 Bootstrap -->
-    <script src="{{ url_for('static', filename='libs/jquery/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='libs/bootstrap/bootstrap.bundle.min.js') }}"></script>
+</script>
+<!-- 引入 ECharts -->
+<script src="{{ url_for('static', filename='libs/echarts/echarts.min.js') }}"></script>
+<!-- 引入 jQuery 和 Bootstrap -->
+<script src="{{ url_for('static', filename='libs/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='libs/bootstrap/bootstrap.bundle.min.js') }}"></script>
 {% endblock content %}

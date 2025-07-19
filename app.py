@@ -382,14 +382,14 @@ def cleanup_stale_battles(app):
 def create_app(config_object=Config):
     """创建Flask应用实例"""
     app = Flask(__name__)
-    
+
     # 关键配置：把会话放到 Redis（所有 worker 共用）
-    app.config['SESSION_TYPE']            = 'redis'
-    app.config['SESSION_REDIS']           = redis.from_url('redis://localhost:6379/0')
-    app.config['SESSION_KEY_PREFIX']      = 'avalon:'
+    app.config["SESSION_TYPE"] = "redis"
+    app.config["SESSION_REDIS"] = redis.from_url("redis://localhost:6379/0")
+    app.config["SESSION_KEY_PREFIX"] = "avalon:"
     # app.config['SECRET_KEY']              = config
     app.config.from_object(config_object)
-    
+
     # 初始化服务器端会话
     Session(app)
 
