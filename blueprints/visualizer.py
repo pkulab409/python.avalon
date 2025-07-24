@@ -68,7 +68,9 @@ def game_replay(game_id):
                         game_data = json.load(f)
                     for event in game_data:
                         if event.get("event_type") == "RoleAssign":
-                            player_ids = list(event.get("event_data", {}).keys())
+                            roles_data = event.get("event_data", {})
+                            # 按玩家编号排序，确保顺序正确
+                            player_ids = sorted(roles_data.keys(), key=lambda x: int(x))
                             # 返回 ["玩家1", "玩家2", ...] 或直接返回编号
                             return [f"玩家{pid}" for pid in player_ids]
                 except Exception as e:

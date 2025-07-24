@@ -33,7 +33,7 @@
                     {% for player in battle_players %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                玩家 {{ player.player_index }}:
+                                玩家 {{ player.position }}:
                                 <a href="{{ url_for('profile.user_profile', user_id=player.user.id) }}">{{ player.user.username }}</a>
                                 {% if player.user_id == current_user.id %}<span class="badge bg-secondary ms-1">你</span>{% endif %}
                             </div>
@@ -494,7 +494,7 @@
                     const playerNum = parseInt(player);
                     // 获取与玩家对应的BattlePlayer对象
                     const battlePlayer = battlePlayers.find(
-                      (bp) => bp.player_index === playerNum
+                      (bp) => bp.position === playerNum
                     );
                     const playerName = battlePlayer
                       ? battlePlayer.user.username

@@ -827,20 +827,20 @@ def delete_battle(battle):
 
 def get_battle_players_for_battle(battle_id):
     """
-    获取指定对战的所有 BattlePlayer 参与者记录。
+    获取指定对战的所有 BattlePlayer 参与者记录，按位置排序。
 
     参数:
         battle_id (str): 对战ID。
 
     返回:
-        list: BattlePlayer 对象列表，出错则返回空列表。
+        list: BattlePlayer 对象列表，按position字段排序，出错则返回空列表。
     """
     try:
         # Because lazy='dynamic' on battle.players, Battle.query.get(battle_id).players
         # returns a query. Executing .all() here fetches the list.
         battle = get_battle_by_id(battle_id)
         if battle:
-            return battle.players.all()  # Executes the dynamic query
+            return battle.players.order_by("position").all()  # 按position排序
         return []
     except Exception as e:
         logger.error(f"获取对战 {battle_id} 的参与者失败: {e}", exc_info=True)
