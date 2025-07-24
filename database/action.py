@@ -1142,10 +1142,16 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                 return BLUE_TEAM
 
         # 生成用户ID到队伍的映射
-        team_map = {
-            bp.user_id: _get_team_assignment(idx + 1)
-            for idx, bp in enumerate(battle_players)
-        }
+        # 修复：使用position作为player_id，而不是enumerate的索引
+        team_map = {}
+        for bp in battle_players:
+            if bp.position is not None:
+                team_map[bp.user_id] = _get_team_assignment(bp.position)
+            else:
+                # 如果position为None，记录警告并跳过
+                logger.warning(
+                    f"[Battle {battle_id}] 玩家 {bp.user_id} 的position为None，跳过队伍分配"
+                )
 
         logger.info(f"[Battle {battle_id}] 生成的队伍映射: {team_map}")
 
@@ -1307,10 +1313,25 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                 if team in team_elos:
                     team_elos[team].append(stats.elo_score)
 
-            tokens_standard = [
-                (tokens[ui - 1]["input"] + 3 * tokens[ui - 1]["output"]) / 4
-                for ui in range(1, 8)
-            ]  # 一倍输入和三倍输出的和
+            # 修复：构建按position映射的tokens，确保索引对应正确
+            tokens_by_position = {}
+            if len(tokens) >= 7:
+                # tokens数组按player_id(1-7)顺序排列
+                for i in range(7):
+                    player_id = i + 1  # player_id从1开始
+                    tokens_by_position[player_id] = tokens[i]
+            else:
+                # 如果tokens数据不足，创建默认值
+                for i in range(1, 8):
+                    tokens_by_position[i] = {"input": 0, "output": 0}
+
+            tokens_standard = []
+            for player_id in range(1, 8):
+                token_data = tokens_by_position.get(
+                    player_id, {"input": 0, "output": 0}
+                )
+                standard_token = (token_data["input"] + 3 * token_data["output"]) / 4
+                tokens_standard.append(standard_token)
 
             tokens_avg = max(
                 MAX_TOKEN_ALLOWED, sum(tokens_standard) / 7
