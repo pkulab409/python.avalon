@@ -384,7 +384,7 @@ def create_app(config_object=Config):
     app = Flask(__name__)
 
     # 关键配置：把会话放到 Redis（所有 worker 共用）
-    app.config["SESSION_TYPE"] = "filesystem"
+    app.config["SESSION_TYPE"] = "redis"
     app.config["SESSION_REDIS"] = redis.from_url("redis://localhost:6379/0")
     app.config["SESSION_KEY_PREFIX"] = "avalon:"
     # app.config['SECRET_KEY']              = config
