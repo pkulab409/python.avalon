@@ -259,7 +259,7 @@ from game.avalon_game_helper import (
 
 请根据需要在策略中调用，记录、分析对局数据。
 
-- 关于公有库、私有库的 [更多说明](./lib_data_format)
+- 关于公有库、私有库的更多说明，详见公私有库文档
 
 ---
 
