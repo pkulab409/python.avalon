@@ -68,15 +68,39 @@ def game_replay(game_id):
                         game_data = json.load(f)
                     for event in game_data:
                         if event.get("event_type") == "RoleAssign":
-                            player_ids = list(event.get("event_data", {}).keys())
-                            # 返回 ["玩家1", "玩家2", ...] 或直接返回编号
-                            return [f"玩家{pid}" for pid in player_ids]
+                            roles_data = event.get("event_data", {})
+                            # 创建按player_id索引的用户名数组
+                            max_players = 7
+                            usernames = ["未知"] * max_players
+                            for pid_str in roles_data.keys():
+                                pid = int(pid_str)
+                                if 1 <= pid <= max_players:
+                                    usernames[pid - 1] = f"玩家{pid}"
+                            return usernames
                 except Exception as e:
                     print(f"自动提取用户名失败: {e}")
             # 实在没有就返回空
             return []
-        player_objs = battle_obj.get_players()
-        return [player.username for player in player_objs]
+
+        # 获取所有BattlePlayer并创建按position索引的用户名数组
+        # 确保数组索引与player_id的对应关系：player_usernames[player_id - 1] = username
+        max_players = 7  # 阿瓦隆最多7个玩家
+        usernames = ["未知"] * max_players  # 初始化
+
+        try:
+            battle_players = battle_obj.players.all()
+            for bp in battle_players:
+                if bp.user and bp.user.username and bp.position is not None:
+                    # position应该等于游戏中的player_id，从1开始
+                    if 1 <= bp.position <= max_players:
+                        usernames[bp.position - 1] = bp.user.username
+        except Exception as e:
+            print(f"获取用户名失败: {e}")
+            # 如果出错，使用原来的方法作为后备
+            player_objs = battle_obj.get_players()
+            return [player.username for player in player_objs]
+
+        return usernames
 
     try:
         # 处理示例回放的特殊情况

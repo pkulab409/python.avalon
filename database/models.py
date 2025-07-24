@@ -228,11 +228,14 @@ class Battle(db.Model):
         return f"<Battle {self.id} - Status: {self.status}>"
 
     def get_players(self):
-        """获取参与此对战的所有用户的 User 对象"""
-        # 通过 BattlePlayer 关系获取用户对象
+        """获取参与此对战的所有用户的 User 对象，按照游戏中的位置排序"""
+        # 通过 BattlePlayer 关系获取用户对象，按 position 字段排序
         # 注意：lazy='dynamic' 意味着这个返回的是一个查询对象
-        # .all() 会执行查询并返回一个列表
-        return [bp.user for bp in self.players.all() if bp.user]
+        # .order_by() 会按 position 排序，.all() 会执行查询并返回一个列表
+        # 为了处理 position 为 None 的情况，我们使用 COALESCE 或者先过滤
+        battle_players = self.players.order_by("position").all()
+        # 按 position 排序，确保索引与玩家编号对应
+        return [bp.user for bp in battle_players if bp.user and bp.position is not None]
 
     def get_battle_players(self):
         """获取此对战所有 BattlePlayer 记录"""

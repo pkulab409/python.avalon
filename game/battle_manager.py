@@ -287,7 +287,11 @@ class BattleManager:
         # 补全 position 信息 - 先从数据库获取完整的 BattlePlayer 记录
         from database.models import BattlePlayer
 
-        battle_players = BattlePlayer.query.filter_by(battle_id=battle_id).all()
+        battle_players = (
+            BattlePlayer.query.filter_by(battle_id=battle_id)
+            .order_by(BattlePlayer.position)
+            .all()
+        )
 
         # 创建 BattlePlayer 记录到 participant_data 的映射
         bp_map = {}

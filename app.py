@@ -341,7 +341,7 @@ def cleanup_stale_battles(app):
                             app.logger.info(f"🗑️ 已删除日志文件: {log_file}")
 
                     # 处理ELO变化 (恢复所有可能的ELO变化)
-                    battle_players = battle.players.all()
+                    battle_players = battle.players.order_by("position").all()
                     for bp in battle_players:
                         if bp.elo_change is not None:
                             stats = GameStats.query.filter_by(

@@ -80,10 +80,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for i in range(7) %}
-                                    {% if i < battle_players|length %}
-                                        {% set player = battle_players[i] %}
-                                        {% set player_id = i + 1 %}
+                                {% for player in battle_players %}
+                                    {% if player.position %}
+                                        {% set player_id = player.position %}
                                         {% set role = "" %}
                                         {# 获取角色信息，以多种可能的方式 #}
                                         {% if game_result.get('roles') %}
@@ -106,7 +105,7 @@
                                                 {% else %}
                                                     <span class="text-muted">未知玩家</span>
                                                 {% endif %}
-                                                <span class="text-secondary">({{ i + 1 }}号)</span>
+                                                <span class="text-secondary">({{ player_id }}号)</span>
                                             </td>
                                             <td>
                                                 {% if role == "Merlin" %}
@@ -204,10 +203,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for i in range(7) %}
-                                    {% if i < battle_players|length %}
-                                        {% set player = battle_players[i] %}
-                                        {% set player_id = i + 1 %}
+                                {% for player in battle_players %}
+                                    {% if player.position %}
+                                        {% set player_id = player.position %}
                                         {% set role = "" %}
                                         {# 获取角色信息，以多种可能的方式 #}
                                         {% if game_result.get('roles') %}
@@ -228,7 +226,7 @@
                                                 {% else %}
                                                     未知玩家
                                                 {% endif %}
-                                                ({{ i + 1 }}号)
+                                                ({{ player_id }}号)
                                             </td>
                                             <td>
                                                 {% if role == "Merlin" %}
