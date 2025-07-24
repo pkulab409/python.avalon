@@ -40,6 +40,11 @@
                                 <i class="fas fa-server"></i> 平台架构
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-doc="lib_data_format">
+                                <i class="fas fa-code"></i> 公私有库
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -234,11 +239,23 @@
             'README': '游戏规则',
             'code_submission_guide': '代码规范',
             'elo': '计分规则',
-            'server_func': '平台架构'
+            'server_func': '平台架构',
+            'lib_data_format': '公有库与私有库'
         };
 
+        // 获取当前文档名（从URL）
+        function getDocNameFromUrl() {
+            const path = window.location.pathname;
+            // 匹配 /docs/xxx
+            const match = path.match(/\/docs\/?([^\/]*)/);
+            if (match && match[1]) {
+                return match[1];
+            }
+            return 'intro'; // 默认文档
+        }
+
         // 加载文档函数
-        function loadDoc(docname) {
+        function loadDoc(docname, updateUrl = true) {
             // 更新页面标题
             const titleElement = document.getElementById('doc-title');
             titleElement.textContent = docTitles[docname] || docname;
@@ -389,12 +406,16 @@
                     document.getElementById('markdown-content').innerHTML = 
                         "⚠️ 文档加载失败: " + error.message;
                 });
+            // 更新URL（不刷新页面）
+            if (updateUrl) {
+                history.replaceState(null, '', '/docs/' + docname);
+            }
         }
 
-        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始加载默认文档
-            loadDoc('intro');
+            // 初始加载当前URL对应文档
+            const initialDoc = getDocNameFromUrl();
+            loadDoc(initialDoc, false);
 
             // 绑定导航点击事件
             document.querySelectorAll('#docs-nav a').forEach(link => {
@@ -402,10 +423,32 @@
                     e.preventDefault();
                     const docname = this.getAttribute('data-doc');
                     loadDoc(docname);
-                    
-                    // 更新URL（不刷新页面）
-                    history.replaceState(null, '', '/docs/' + docname);
                 });
+            });
+
+            // 新增：拦截 markdown 内容区的链接点击，实现文档内跳转
+            document.getElementById('markdown-content').addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    const href = e.target.getAttribute('href');
+                    // 只处理内部文档链接（不含http/https/锚点/外部链接）
+                    if (href && !href.startsWith('http') && !href.startsWith('#')) {
+                        e.preventDefault();
+                        let docname = href;
+                        // 支持 /docs/xxx 或 xxx 或 xxx.md
+                        if (href.startsWith('/docs/')) {
+                            docname = href.replace('/docs/', '').replace(/\.md$/, '');
+                        } else {
+                            docname = href.replace(/\.md$/, '');
+                        }
+                        loadDoc(docname);
+                    }
+                }
+            });
+
+            // 监听浏览器前进/后退，保证页面不会裸露md
+            window.addEventListener('popstate', function() {
+                const doc = getDocNameFromUrl();
+                loadDoc(doc, false);
             });
         });
 </script>

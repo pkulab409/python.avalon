@@ -51,7 +51,7 @@ PLAYER_COUNT = 7  # 玩家数量
 MISSION_MEMBER_COUNT = [2, 3, 3, 4, 4]  # 每轮任务需要的队员数
 MAX_MISSION_ROUNDS = 5  # 最大任务轮数
 MAX_VOTE_ROUNDS = 5  # 最大投票轮数
-MAX_EXECUTION_TIME = 100
+MAX_EXECUTION_TIME = 500  # 允许等待的最长时间(s)
 
 
 class GameTerminationError(Exception):
