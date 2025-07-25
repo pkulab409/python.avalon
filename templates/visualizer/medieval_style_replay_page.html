@@ -1408,6 +1408,18 @@
                 </div>
                 <div class="clearfix"></div>
               `;
+                    } else if (eventItem.type === "team_propose") {
+                        const proposeData = eventItem.data;
+                        const leaderInfo = getPlayerInfo(proposeData.leader);
+                        chatHtml += `
+                <div class="message-system">
+                  <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})<br>
+                  <i class="bi bi-people-fill"></i> <strong>重新提议队伍:</strong>
+                  ${proposeData.team_members && proposeData.team_members.length > 0
+                            ? proposeData.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
+                            : '无'}
+                </div>
+              `;
                     } else if (eventItem.type === "vote_attempt") {
                         const voteAttempt = eventItem.data;
                         const approved = voteAttempt.approved;
