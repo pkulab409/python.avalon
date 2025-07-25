@@ -1370,6 +1370,14 @@
                         : '无'}
             </div>
           `;
+            } else if (event.team_members && event.team_members.length > 0) {
+                // 如果没有leader信息但有team_members，仍然显示提议队伍
+                chatHtml += `
+            <div class="message-system">
+              <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
+              ${event.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')}
+            </div>
+          `;
             }
 
             if (event.events && event.events.length > 0) {
