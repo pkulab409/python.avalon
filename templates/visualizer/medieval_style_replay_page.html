@@ -1359,15 +1359,7 @@
           </div>
         `;
 
-            // 只显示队长信息，不在这里显示队伍提议（因为会在events中处理team_propose事件）
-            if (event.leader) {
-                const leaderInfo = getPlayerInfo(event.leader);
-                chatHtml += `
-            <div class="message-system">
-              <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})
-            </div>
-          `;
-            }
+            // 不在回合级别显示队长和队伍信息，统一在team_propose事件中处理
 
             if (event.events && event.events.length > 0) {
                 event.events.forEach(eventItem => {
@@ -1402,6 +1394,7 @@
                         const leaderInfo = getPlayerInfo(proposeData.leader);
                         chatHtml += `
                 <div class="message-system">
+                  <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})<br>
                   <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
                   ${proposeData.team_members && proposeData.team_members.length > 0
                             ? proposeData.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
