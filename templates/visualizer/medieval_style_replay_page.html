@@ -1283,6 +1283,11 @@
     }
 
     function getPlayerInfo(playerId) {
+        // 处理null、undefined或空值
+        if (!playerId || playerId === 'null' || playerId === 'undefined') {
+            return { id: '?', role: '未知角色', name: '未知', faction: 'unknown' };
+        }
+        
         const idStr = String(playerId);
         let role = roles[idStr] || '未知角色';
         
@@ -1391,16 +1396,31 @@
               `;
                     } else if (eventItem.type === "team_propose") {
                         const proposeData = eventItem.data;
-                        const leaderInfo = getPlayerInfo(proposeData.leader);
-                        chatHtml += `
+                        // 如果提议数据中没有leader信息，尝试从回合级别获取
+                        const leaderId = proposeData.leader || event.leader;
+                        
+                        if (leaderId) {
+                            const leaderInfo = getPlayerInfo(leaderId);
+                            chatHtml += `
                 <div class="message-system">
                   <i class="bi bi-person-badge"></i> <strong>队长:</strong> ${leaderInfo.id}号 (${leaderInfo.name})<br>
                   <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
                   ${proposeData.team_members && proposeData.team_members.length > 0
-                            ? proposeData.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
-                            : '无'}
+                                ? proposeData.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
+                                : '无'}
                 </div>
               `;
+                        } else {
+                            // 如果没有队长信息，只显示队伍
+                            chatHtml += `
+                <div class="message-system">
+                  <i class="bi bi-people-fill"></i> <strong>提议队伍:</strong>
+                  ${proposeData.team_members && proposeData.team_members.length > 0
+                                ? proposeData.team_members.map(memberId => `<span class="badge bg-secondary mx-1">${getPlayerInfo(memberId).id}号</span>`).join('')
+                                : '无'}
+                </div>
+              `;
+                        }
                     } else if (eventItem.type === "vote_attempt") {
                         const voteAttempt = eventItem.data;
                         const approved = voteAttempt.approved;

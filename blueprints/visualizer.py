@@ -471,17 +471,26 @@ def process_game_events(game_data):
 
             if event_type == "Leader":
                 current_round["leader"] = str(event_data)  # Ensure string ID
+                print(
+                    f"Leader event - Round {round_num}, Leader: {current_round['leader']}"
+                )
             elif event_type == "TeamPropose":
                 # Ensure members are strings
                 members = (
                     [str(m) for m in event_data] if isinstance(event_data, list) else []
                 )
                 current_round["team_members"] = members
+                # 使用当前回合的leader信息，如果没有则设为None
+                leader_id = current_round.get("leader")
+                # 调试信息
+                print(
+                    f"TeamPropose event - Round {round_num}, Leader: {leader_id}, Members: {members}"
+                )
                 current_round["events"].append(
                     {
                         "type": "team_propose",
                         "data": {
-                            "leader": current_round["leader"],
+                            "leader": leader_id,
                             "team_members": members,
                         },
                     }
