@@ -432,24 +432,39 @@ def process_game_events(game_data):
     assassination_info = None
     current_leader = None  # 跟踪当前队长
 
-    # 预扫描：收集每轮的队长信息
-    leader_by_round = {}
+    # 预扫描：为每个TeamPropose事件找到对应的Leader
+    team_propose_leaders = {}  # {event_index: leader_id}
     temp_round = 0
     temp_leader = None
 
-    for event in game_data:
+    for i, event in enumerate(game_data):
         event_type = event.get("event_type")
         event_data = event.get("event_data")
 
         if event_type == "RoundStart" and isinstance(event_data, int):
             temp_round = event_data
+            temp_leader = None  # 重置队长，等待新的Leader事件
         elif event_type == "Leader":
             temp_leader = str(event_data)
-            if temp_round > 0:
-                leader_by_round[temp_round] = temp_leader
-                print(f"Pre-scan: Round {temp_round} leader is {temp_leader}")
+            print(f"Pre-scan: Found Leader {temp_leader} at index {i}")
+        elif event_type == "TeamPropose":
+            # 为当前的TeamPropose事件记录对应的队长
+            if temp_leader:
+                team_propose_leaders[i] = temp_leader
+                print(f"Pre-scan: TeamPropose at index {i} -> Leader {temp_leader}")
+            else:
+                # 向前搜索最近的Leader事件
+                for j in range(i - 1, -1, -1):
+                    prev_event = game_data[j]
+                    if prev_event.get("event_type") == "Leader":
+                        leader_id = str(prev_event.get("event_data"))
+                        team_propose_leaders[i] = leader_id
+                        print(
+                            f"Pre-scan: TeamPropose at index {i} -> Leader {leader_id} (from backward search)"
+                        )
+                        break
 
-    for event in game_data:
+    for i, event in enumerate(game_data):
         event_type = event.get("event_type")
         event_data = event.get("event_data")
 
@@ -468,15 +483,11 @@ def process_game_events(game_data):
         if event_type == "RoundStart":
             if isinstance(event_data, int):
                 round_num = event_data
-                # 使用预扫描的队长信息初始化
-                if round_num in leader_by_round:
-                    current_leader = leader_by_round[round_num]
                 if round_num > 0 and round_num not in events_by_round:
                     # Initialize round structure when RoundStart is encountered
                     events_by_round[round_num] = {
                         "round": round_num,
-                        "leader": current_leader
-                        or leader_by_round.get(round_num),  # 使用预扫描的队长信息
+                        "leader": None,  # 将在TeamPropose时确定
                         "team_members": [],
                         # Combined list of events: [(type, data)]
                         "events": [],
@@ -503,15 +514,15 @@ def process_game_events(game_data):
                     [str(m) for m in event_data] if isinstance(event_data, list) else []
                 )
                 current_round["team_members"] = members
-                # 使用当前时刻的队长信息，如果没有则使用预扫描的队长信息或回合级别的队长信息作为后备
+                # 使用预扫描找到的对应队长信息
                 leader_id = (
-                    current_leader
-                    or leader_by_round.get(round_num)
+                    team_propose_leaders.get(i)
+                    or current_leader
                     or current_round.get("leader")
                 )
                 # 调试信息
                 print(
-                    f"TeamPropose event - Round {round_num}, Leader: {leader_id} (current: {current_leader}, pre-scan: {leader_by_round.get(round_num)}, round: {current_round.get('leader')}), Members: {members}"
+                    f"TeamPropose event - Round {round_num}, Leader: {leader_id} (pre-scan: {team_propose_leaders.get(i)}, current: {current_leader}, round: {current_round.get('leader')}), Members: {members}"
                 )
                 current_round["events"].append(
                     {
