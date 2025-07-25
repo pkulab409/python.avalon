@@ -1396,8 +1396,7 @@
               `;
                     } else if (eventItem.type === "team_propose") {
                         const proposeData = eventItem.data;
-                        // 如果提议数据中没有leader信息，尝试从回合级别获取
-                        const leaderId = proposeData.leader || event.leader;
+                        const leaderId = proposeData.leader;
                         
                         if (leaderId) {
                             const leaderInfo = getPlayerInfo(leaderId);

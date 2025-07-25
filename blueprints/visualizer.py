@@ -430,6 +430,7 @@ def process_game_events(game_data):
     events_by_round = {}
     round_num = 0
     assassination_info = None
+    current_leader = None  # 跟踪当前队长
 
     for event in game_data:
         event_type = event.get("event_type")
@@ -450,6 +451,7 @@ def process_game_events(game_data):
         if event_type == "RoundStart":
             if isinstance(event_data, int):
                 round_num = event_data
+                current_leader = None  # 重置当前队长
                 if round_num > 0 and round_num not in events_by_round:
                     # Initialize round structure when RoundStart is encountered
                     events_by_round[round_num] = {
@@ -470,18 +472,19 @@ def process_game_events(game_data):
             current_round = events_by_round[round_num]
 
             if event_type == "Leader":
-                current_round["leader"] = str(event_data)  # Ensure string ID
-                print(
-                    f"Leader event - Round {round_num}, Leader: {current_round['leader']}"
+                current_leader = str(event_data)  # 更新当前队长
+                current_round["leader"] = (
+                    current_leader  # 也更新回合级别的队长（用于向后兼容）
                 )
+                print(f"Leader event - Round {round_num}, Leader: {current_leader}")
             elif event_type == "TeamPropose":
                 # Ensure members are strings
                 members = (
                     [str(m) for m in event_data] if isinstance(event_data, list) else []
                 )
                 current_round["team_members"] = members
-                # 使用当前回合的leader信息，如果没有则设为None
-                leader_id = current_round.get("leader")
+                # 使用当前时刻的队长信息
+                leader_id = current_leader
                 # 调试信息
                 print(
                     f"TeamPropose event - Round {round_num}, Leader: {leader_id}, Members: {members}"
