@@ -434,35 +434,60 @@ def process_game_events(game_data):
 
     # 预扫描：为每个TeamPropose事件找到对应的Leader
     team_propose_leaders = {}  # {event_index: leader_id}
-    temp_round = 0
-    temp_leader = None
 
     for i, event in enumerate(game_data):
         event_type = event.get("event_type")
         event_data = event.get("event_data")
 
-        if event_type == "RoundStart" and isinstance(event_data, int):
-            temp_round = event_data
-            temp_leader = None  # 重置队长，等待新的Leader事件
-        elif event_type == "Leader":
-            temp_leader = str(event_data)
-            print(f"Pre-scan: Found Leader {temp_leader} at index {i}")
-        elif event_type == "TeamPropose":
-            # 为当前的TeamPropose事件记录对应的队长
-            if temp_leader:
-                team_propose_leaders[i] = temp_leader
-                print(f"Pre-scan: TeamPropose at index {i} -> Leader {temp_leader}")
-            else:
-                # 向前搜索最近的Leader事件
-                for j in range(i - 1, -1, -1):
-                    prev_event = game_data[j]
-                    if prev_event.get("event_type") == "Leader":
-                        leader_id = str(prev_event.get("event_data"))
-                        team_propose_leaders[i] = leader_id
+        if event_type == "TeamPropose":
+            # 为每个TeamPropose事件查找对应的Leader
+            leader_id = None
+            current_round = None
+
+            # 首先找到当前轮次
+            for j in range(i - 1, -1, -1):
+                prev_event = game_data[j]
+                if prev_event.get("event_type") == "RoundStart" and isinstance(
+                    prev_event.get("event_data"), int
+                ):
+                    current_round = prev_event.get("event_data")
+                    break
+
+            # 在当前轮次内查找最近的Leader事件（向前或向后查找）
+            if current_round:
+                # 首先向后查找（TeamPropose后面的Leader事件）
+                for j in range(i + 1, len(game_data)):
+                    next_event = game_data[j]
+                    # 如果遇到下一轮开始，停止查找
+                    if next_event.get("event_type") == "RoundStart":
+                        break
+                    if next_event.get("event_type") == "Leader":
+                        leader_id = str(next_event.get("event_data"))
                         print(
-                            f"Pre-scan: TeamPropose at index {i} -> Leader {leader_id} (from backward search)"
+                            f"Pre-scan: TeamPropose at index {i} -> Leader {leader_id} (found forward)"
                         )
                         break
+
+                # 如果向后没找到，向前查找（TeamPropose前面的Leader事件）
+                if not leader_id:
+                    for j in range(i - 1, -1, -1):
+                        prev_event = game_data[j]
+                        # 如果遇到前一轮结束，停止查找
+                        if prev_event.get("event_type") == "RoundStart":
+                            break
+                        if prev_event.get("event_type") == "Leader":
+                            leader_id = str(prev_event.get("event_data"))
+                            print(
+                                f"Pre-scan: TeamPropose at index {i} -> Leader {leader_id} (found backward)"
+                            )
+                            break
+
+            if leader_id:
+                team_propose_leaders[i] = leader_id
+            else:
+                print(
+                    f"Pre-scan: Warning - No leader found for TeamPropose at index {i}"
+                )
 
     for i, event in enumerate(game_data):
         event_type = event.get("event_type")
