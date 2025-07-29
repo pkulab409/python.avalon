@@ -14,7 +14,6 @@
 - 备用：BattlePlayer 独立 CRUD 操作
 """
 import os
-
 import yaml
 from flask import current_app
 import threading, time
@@ -1234,9 +1233,29 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                     team_elos[team].append(stats.elo_score)
 
             team_avg = {
-                team: sum(scores) / len(scores) if scores else 0
+                team: (
+                    (scores[0] * scores[1] * scores[2] * scores[3]) ** (1 / len(scores))
+                    if len(scores) == 4
+                    else (
+                        (scores[0] * scores[1] * scores[2]) ** (1 / len(scores))
+                        if len(scores) == 3
+                        else (
+                            scores[0]
+                            if len(scores) == 1
+                            else (
+                                1200
+                                if len(scores) == 0  # 默认值
+                                else (
+                                    (scores[0] * scores[1]) ** (1 / len(scores))
+                                    if len(scores) == 2
+                                    else 0
+                                )
+                            )
+                        )
+                    )
+                )  # 几何平均，缓和低分玩家的影响
                 for team, scores in team_elos.items()
-            }
+            }  # 这里改为几何平均，给有大蠢蛋参与队伍的强者发点补助
 
             # 计算惩罚值 - 改进的惩罚计算逻辑
             # 对于代码错误，基础惩罚为30分，加上队伍差距的10%
@@ -1272,6 +1291,25 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                 + f"类型系数={error_type_multiplier}, 方法惩罚={method_penalty}, 总计={total_reduction}"
             )
 
+            # 计算其他玩家应该获得的补偿分数
+            other_players = [
+                user_id for user_id in user_stats_map.keys() if user_id != err_user_id
+            ]
+            compensation_per_player = 0
+            if other_players:
+                # 使用四舍五入计算每个玩家的补偿分数
+                compensation_per_player = round(total_reduction / len(other_players))
+            else:
+                # 如果没有其他玩家，记录警告
+                logger.warning(
+                    f"[Battle {battle_id}] 错误玩家 {err_user_id} 不在user_stats_map中，无法进行补偿计算"
+                )
+
+            logger.info(
+                f"[Battle {battle_id}] 补偿分配: 错误玩家扣分={total_reduction}, "
+                + f"其他玩家数量={len(other_players)}, 每人补偿={compensation_per_player}"
+            )
+
             # 更新所有玩家数据
             for user_id, stats in user_stats_map.items():
                 bp = next((p for p in battle_players if p.user_id == user_id), None)
@@ -1285,17 +1323,20 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                 # 错误玩家特殊处理
                 if user_id == err_user_id:
                     stats.losses += 1
-                    new_elo = max(round(stats.elo_score - total_reduction), 100)
+                    new_elo = max(round(stats.elo_score - total_reduction), 10)
                     bp.elo_change = new_elo - stats.elo_score
                     stats.elo_score = new_elo
                     logger.info(
                         f"[Battle {battle_id}] [ERROR] 扣除ELO: 玩家 {user_id} | {bp.initial_elo} -> {new_elo} (减少: {total_reduction}分)"
                     )
                 else:
-                    bp.elo_change = 0
+                    # 其他玩家获得相同的补偿分数
                     stats.draws += 1
+                    new_elo = max(round(stats.elo_score + compensation_per_player), 10)
+                    bp.elo_change = new_elo - stats.elo_score
+                    stats.elo_score = new_elo
                     logger.info(
-                        f"[Battle {battle_id}] 其他玩家不受影响: 玩家 {user_id} | ELO 保持 {stats.elo_score}"
+                        f"[Battle {battle_id}] 补偿ELO: 玩家 {user_id} | {bp.initial_elo} -> {new_elo} (增加: {compensation_per_player}分)"
                     )
 
                 db.session.add(stats)
@@ -1320,8 +1361,14 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                 for i in range(7):
                     player_id = i + 1  # player_id从1开始
                     tokens_by_position[player_id] = tokens[i]
+                logger.info(
+                    f"[Battle {battle_id}] 使用完整tokens数据: {len(tokens)}个记录"
+                )
             else:
                 # 如果tokens数据不足，创建默认值
+                logger.warning(
+                    f"[Battle {battle_id}] tokens数据不足，预期7个，实际{len(tokens)}个，使用默认值"
+                )
                 for i in range(1, 8):
                     tokens_by_position[i] = {"input": 0, "output": 0}
 
@@ -1341,12 +1388,30 @@ def process_battle_results_and_update_stats(battle_id, results_data):
 
             team_avg = {
                 team: (
-                    len(scores) / sum([min(1, 1 / score) for score in scores])
-                )  # 防止分母为0
+                    (scores[0] * scores[1] * scores[2] * scores[3]) ** (1 / len(scores))
+                    if len(scores) == 4
+                    else (
+                        (scores[0] * scores[1] * scores[2]) ** (1 / len(scores))
+                        if len(scores) == 3
+                        else (
+                            scores[0]
+                            if len(scores) == 1
+                            else (
+                                1200
+                                if len(scores) == 0  # 默认值
+                                else (
+                                    (scores[0] * scores[1]) ** (1 / len(scores))
+                                    if len(scores) == 2
+                                    else 0
+                                )
+                            )
+                        )
+                    )
+                )  # 几何平均，缓和低分玩家的影响
                 for team, scores in team_elos.items()
-            }  # 这里改为调和平均，给有大蠢蛋参与队伍的强者发点补助
+            }  # 这里改为几何平均，给有大蠢蛋参与队伍的强者发点补助
 
-            K_FACTOR = 100
+            K_FACTOR = 30
             red_expected = 1 / (
                 1 + 10 ** ((team_avg[BLUE_TEAM] - team_avg[RED_TEAM]) / 400)
             )
@@ -1359,6 +1424,10 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                 BLUE_TEAM: 1.0 if results_data.get("winner") == BLUE_TEAM else 0.0,
             }
 
+            # 计算所有玩家的ELO变化
+            player_deltas = {}
+            total_delta = 0
+
             for user_id, stats in user_stats_map.items():
                 bp = next((p for p in battle_players if p.user_id == user_id), None)
                 if not bp or bp.position is None:
@@ -1370,14 +1439,46 @@ def process_battle_results_and_update_stats(battle_id, results_data):
                     actual_score[team]
                     - min(1, expected * (0.9 + (max(proportion[idx] - 1, 0) / 3)))
                 )
+                player_deltas[user_id] = delta
+                total_delta += delta
+
+            # 归一化：确保所有ELO变化之和为0
+            if len(player_deltas) > 0:
+                adjustment = total_delta / len(player_deltas)
+                # 使用更精确的调整方法，避免累积误差
+                adjusted_deltas = {}
+                total_adjusted = 0
+                for user_id, delta in player_deltas.items():
+                    adjusted_delta = delta - adjustment
+                    adjusted_deltas[user_id] = adjusted_delta
+                    total_adjusted += adjusted_delta
+
+                # 如果仍有误差，将误差分配给第一个玩家
+                if abs(total_adjusted) > 0.01:  # 允许0.01的误差
+                    first_user = list(adjusted_deltas.keys())[0]
+                    adjusted_deltas[first_user] -= total_adjusted
+                    logger.info(
+                        f"[Battle {battle_id}] 归一化调整误差: {total_adjusted:.6f}，分配给玩家 {first_user}"
+                    )
+
+                player_deltas = adjusted_deltas
+
+            # 应用ELO变化
+            for user_id, stats in user_stats_map.items():
+                bp = next((p for p in battle_players if p.user_id == user_id), None)
+                if not bp or bp.position is None:
+                    continue
+
+                delta = player_deltas.get(user_id, 0)
 
                 stats.games_played += 1
+                team = team_map[user_id]
                 if team_outcomes[team] == "win":
                     stats.wins += 1
                 else:
                     stats.losses += 1
 
-                new_elo = max(round(stats.elo_score + delta), 100)
+                new_elo = max(round(stats.elo_score + delta), 10)
                 bp.initial_elo = stats.elo_score
                 bp.elo_change = new_elo - stats.elo_score
                 stats.elo_score = new_elo
