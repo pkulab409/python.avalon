@@ -54,9 +54,6 @@ class Player:
         - 自己一定上
         - 优先选择不在嫌疑列表的人
         """
-        # 随机报错：有0.1概率报错
-        if random.random() < 0.1:
-            raise Exception("随机报错：玩家在设置索引时发生错误")
         # 确保候选人列表中不包含自己，并且数量足够
         candidates = [
             i for i in range(1, 8) if i != self.index and i not in self.suspects
