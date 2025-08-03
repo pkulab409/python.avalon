@@ -387,6 +387,7 @@ def create_app(config_object=Config):
     app.config["SESSION_TYPE"] = "redis"
     app.config["SESSION_REDIS"] = redis.from_url("redis://localhost:6379/0")
     app.config["SESSION_KEY_PREFIX"] = "avalon:"
+    app.config["WTF_CSRF_ENABLED"] = False
     # app.config['SECRET_KEY']              = config
     app.config.from_object(config_object)
 

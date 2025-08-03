@@ -618,28 +618,6 @@ def reset_auto_primary_match():
 @admin_required
 def start_auto_semi_match():
 
-    # 1. 从榜单1-6的前50%晋级到榜单11
-    primary_ids = list(
-        range(PRIMARY_RANKING_START_ID, PRIMARY_RANKING_START_ID + PRIMARY_PARTITION)
-    )
-    target_ranking_id = SEMI_RANKING_START_ID  # 榜单11
-
-    # 执行晋级操作
-    promotion_result = promote_from_multiple_rankings(
-        primary_ids, target_ranking_id, percentage=0.5
-    )
-
-    # 记录晋级结果
-    total_promoted = promotion_result["summary"]["success"]
-    logging.info(f"从初选赛榜单晋级到半决赛榜单: 成功晋级 {total_promoted} 名选手")
-
-    for ranking_id, result in promotion_result["details"].items():
-        logging.info(
-            f"榜单 {ranking_id} 晋级结果: 成功 {result['success']}/{result['total']}"
-        )
-        if result["errors"]:
-            for error in result["errors"]:
-                logging.warning(f"榜单 {ranking_id} 晋级错误: {error}")
 
     # 2. 启动半决赛榜单的自动对战
     semi_ids = range(SEMI_RANKING_START_ID, SEMI_RANKING_START_ID + SEMI_PARTITION)
