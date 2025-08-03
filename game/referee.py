@@ -211,6 +211,13 @@ class AvalonReferee:
 
         # 为这个referee创建一个专用的GameHelper实例
         self.game_helper = GameHelper(data_dir=self.data_dir)
+        
+        # 为每个玩家创建独立的GameHelper实例，避免数据混淆
+        self.player_helpers = {}  # {player_id: GameHelper}
+        for player_id in range(1, PLAYER_COUNT + 1):
+            player_helper = GameHelper(data_dir=self.data_dir)
+            player_helper.game_session_id = self.game_id
+            self.player_helpers[player_id] = player_helper
 
         # 装饰器
         if settings["avalon_game_helper.GameHelper"] == 1:
@@ -1449,8 +1456,18 @@ class AvalonReferee:
             )
 
             # 记录最终结果
+            # 收集所有玩家的token统计
+            all_tokens = []
+            for player_id in range(1, PLAYER_COUNT + 1):
+                player_tokens = self.player_helpers[player_id].get_tokens()
+                # 只取该玩家的token统计（索引player_id-1）
+                if len(player_tokens) > player_id - 1:
+                    all_tokens.append(player_tokens[player_id - 1])
+                else:
+                    all_tokens.append({"input": 0, "output": 0})
+            
             self.log_public_event(
-                {"type": "tokens", "result": self.game_helper.get_tokens()}
+                {"type": "tokens", "result": all_tokens}
             )
             self.log_public_event({"type": "game_end", "result": game_result})
             logger.info(f"===== Game {self.game_id} Finished =====")
@@ -1567,17 +1584,18 @@ class AvalonReferee:
 
         try:
             # 设置当前上下文
-            # 1. 设置referee实例的上下文
-            self.game_helper.set_current_context(player_id, self.game_id)
+            # 1. 使用该玩家专用的GameHelper实例
+            player_helper = self.player_helpers[player_id]
+            player_helper.set_current_context(player_id, self.game_id)
 
-            # 将当前线程的helper设为referee的专属实例
-            self.set_thread_helper(self.game_helper)
+            # 将当前线程的helper设为该玩家的专用实例
+            self.set_thread_helper(player_helper)
 
             # 3. 设置当前轮次信息
             if self.current_round is not None:
                 self.set_current_round(self.current_round)
 
-            current_context_player_id = self.game_helper.get_current_player_id()
+            current_context_player_id = player_helper.get_current_player_id()
             if current_context_player_id != player_id:
                 error_msg = f"Context player ID mismatch before execution: expected {player_id}, got {current_context_player_id}"
                 logger.error(error_msg)
@@ -1593,7 +1611,7 @@ class AvalonReferee:
 
             result = method(*args, **kwargs)
             execution_time = time.time() - start_time
-            post_context_player_id = self.game_helper.get_current_player_id()
+            post_context_player_id = player_helper.get_current_player_id()
             if post_context_player_id != player_id:
                 error_msg = f"Context player ID changed during execution: expected {player_id}, got {post_context_player_id}"
                 logger.error(error_msg)

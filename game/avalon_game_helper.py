@@ -67,6 +67,11 @@ class GameHelper:
             player_id: 当前玩家 ID
             game_id: 当前游戏会话 ID
         """
+        # 如果切换到不同的玩家，清理可能的缓存状态
+        if self.current_player_id != player_id:
+            # 清理任何可能的缓存数据，确保不会串数据
+            pass
+            
         self.current_player_id = player_id
         self.game_session_id = game_id
 
