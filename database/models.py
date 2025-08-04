@@ -9,11 +9,37 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .base import db, login_manager
 from datetime import datetime
 import uuid
+import shortuuid
+import os
+from dotenv import load_dotenv
 
 
 # 工具函数
 def generate_uuid():
-    return str(uuid.uuid4())
+    return str(shortuuid.encode(uuid.uuid4()))
+
+
+def get_model_name():
+    # 首先尝试加载../game的.env文件，标准化
+    env_path = os.path.normpath(
+        os.path.join(os.path.dirname(__file__), "..", "game", ".env")
+    )
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+    else:
+        # 尝试从项目根目录加载
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        env_path = os.path.join(project_root, ".env")
+        if os.path.exists(env_path):
+            load_dotenv(env_path)
+        else:
+            # 尝试默认加载（搜索当前工作目录和父目录）
+            if load_dotenv():
+                model_name = os.environ.get("OPENAI_MODEL_NAME")
+            else:
+                model_name = "None"
+    model_name = str(os.environ.get("OPENAI_MODEL_NAME")).strip('"')
+    return model_name if model_name else "None"
 
 
 # 用户模型
@@ -186,7 +212,9 @@ class GameStats(db.Model):
 class Battle(db.Model):
     __tablename__ = "battles"
 
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)  # UUID
+    id = db.Column(
+        db.String(36), primary_key=True, default=f"{get_model_name()}_{generate_uuid()}"
+    )  # UUID
     status = db.Column(
         db.String(20), default="waiting"
     )  # waiting, playing, completed, error, cancelled

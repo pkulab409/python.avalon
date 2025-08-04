@@ -93,12 +93,12 @@
                                                 title="针对此AI进行单局快速测试">
                                             <i class="bi bi-play-circle me-1"></i> 单局测试
                                         </button>
-                                        <button type="button" class="btn btn-outline-warning btn-sm"
+                                        <!-- <button type="button" class="btn btn-outline-warning btn-sm"
                                             onclick="startAiSeriesTest('{{ ai.id }}', '{{ ai.name | e }}')" {# Ensure ai.name is
 escaped for JS #} data-bs-toggle="tooltip" data-bs-placement="top"
                                             title="启动7局系列位置测试 (vs Smart AI, 不计ELO)">
                                             <i class="bi bi-fast-forward-circle me-1"></i> 系列测试
-                                        </button>
+                                        </button> -->
                                         <a href="{{ url_for('ai.edit_ai', ai_id=ai.id) }}"
                                            class="btn btn-outline-primary btn-sm"
                                            data-bs-toggle="tooltip"

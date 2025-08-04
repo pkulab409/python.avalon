@@ -618,7 +618,6 @@ def reset_auto_primary_match():
 @admin_required
 def start_auto_semi_match():
 
-
     # 2. 启动半决赛榜单的自动对战
     semi_ids = range(SEMI_RANKING_START_ID, SEMI_RANKING_START_ID + SEMI_PARTITION)
     return _handle_match_operation(

@@ -211,7 +211,7 @@ class AvalonReferee:
 
         # 为这个referee创建一个专用的GameHelper实例
         self.game_helper = GameHelper(data_dir=self.data_dir)
-        
+
         # 为每个玩家创建独立的GameHelper实例，避免数据混淆
         self.player_helpers = {}  # {player_id: GameHelper}
         for player_id in range(1, PLAYER_COUNT + 1):
@@ -1465,10 +1465,8 @@ class AvalonReferee:
                     all_tokens.append(player_tokens[player_id - 1])
                 else:
                     all_tokens.append({"input": 0, "output": 0})
-            
-            self.log_public_event(
-                {"type": "tokens", "result": all_tokens}
-            )
+
+            self.log_public_event({"type": "tokens", "result": all_tokens})
             self.log_public_event({"type": "game_end", "result": game_result})
             logger.info(f"===== Game {self.game_id} Finished =====")
             self.battle_observer.make_snapshot("GameEnd", self.game_id)
