@@ -213,7 +213,7 @@ class Battle(db.Model):
     __tablename__ = "battles"
 
     id = db.Column(
-        db.String(36), primary_key=True, default=f"{get_model_name()}_{generate_uuid()}"
+        db.String(50), primary_key=True, default=f"{get_model_name()}_{generate_uuid()}"
     )  # UUID
     status = db.Column(
         db.String(20), default="waiting"
